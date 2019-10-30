@@ -7,7 +7,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 import java.io.Serializable;
 
 /**
- * 类似springboot项目中的SellException
+ * 类似springboot项目中的SellException和vo对象2合1了
  * @program: hustmall
  * @author: yaopeng
  * @create: 2019-10-29 21:09
