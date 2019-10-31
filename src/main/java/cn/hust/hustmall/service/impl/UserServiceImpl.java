@@ -118,7 +118,10 @@ public class UserServiceImpl implements IUserService {
         if(resultCount > 0){
             //说明答案检验通过
             String forgetToken  = UUID.randomUUID().toString();
-            TokenCache.setKey("token_"+username,forgetToken);
+            //用guava本地缓存可以很轻便很容易的改变数据存储时间~这就比较符合忘记密码的场景了，
+            // 可以根据不同的业务来设置不同的缓存策略，包括弱引用，软引用，过期时间，最大项数
+            //session主要是跟踪用户状态~而且是存储在服务器端~需要手动删除已存储的数据，而且尽量小
+            TokenCache.setKey(TokenCache.TOKEN_PREFIX + username,forgetToken);
             return ServerResponse.createBySuccess(forgetToken);
         }
         return ServerResponse.createByErrorMessage("问题的答案错误");
@@ -157,4 +160,26 @@ public class UserServiceImpl implements IUserService {
         }
             return ServerResponse.createByErrorMessage("修改密码失败");
     }
+
+
+
+    public ServerResponse<String> resetPassword(String passwordOld, String passwordNew, User user){
+        //1.检查用户和其对应的密码正不正确，为了防止横向越权和password来撞库和非本人来修改密码,
+        // 要校验一下这个用户的旧密码,一定要指定是这个用户,否则通过password来撞库也能返回count >0
+        int count = userMapper.checkPassword(MD5Util.MD5EncodeUtf8(passwordOld),user.getId());
+        if(count == 0){
+            return ServerResponse.createByErrorMessage("旧密码错误");
+        }
+
+        //2.更新加密后的密码
+        user.setPassword(MD5Util.MD5EncodeUtf8(passwordNew));
+        int updastResult = userMapper.updateByPrimaryKeySelective(user);
+        if(updastResult > 0){
+            return ServerResponse.createBySuccess("重置密码成功");
+        }
+        return ServerResponse.createByErrorMessage("重置密码失败");
+
+
+    }
+
 }

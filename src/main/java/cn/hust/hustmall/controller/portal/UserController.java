@@ -133,5 +133,28 @@ public class UserController {
             return  iUserService.forgerRestPassword(username,passwordNew,forgetToken);
         }
 
+    /**
+     * 登录状态下的重置密码
+     * @param passwordOld
+     * @param passwordNew
+     * @param session
+     * @return
+     */
+        @RequestMapping(value = "reset_password.do",method = RequestMethod.POST)
+        @ResponseBody
+        public ServerResponse<String> resetPassword(String passwordOld, String passwordNew, HttpSession session ){
+
+               //1.检查用户是否登录
+                User user = (User)session.getAttribute(Const.GCURRENT_USER);
+                if(user == null){
+                    return ServerResponse.createByErrorMessage("用户未登录");
+                }
+
+                //2.重置密码
+                return iUserService.resetPassword(passwordOld,passwordNew,user);
+        }
+
+
+
 
 }
