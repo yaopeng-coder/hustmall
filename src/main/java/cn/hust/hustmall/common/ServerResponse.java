@@ -7,7 +7,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 import java.io.Serializable;
 
 /**
- * 类似springboot项目中的SellException和vo对象2合1了
+ * 类似springboot项目中的SellException和resultvo对象2合1了
  * @program: hustmall
  * @author: yaopeng
  * @create: 2019-10-29 21:09
@@ -53,7 +53,7 @@ public class ServerResponse<T> implements Serializable {
         return new ServerResponse<T>(ResponseCode.SUCCESS.getCode());
     }
 
-    public static <T> ServerResponse<T> createBySuccess(String msg){
+    public static <T> ServerResponse<T> createBySuccessMessage(String msg){
         return new ServerResponse<T>(ResponseCode.SUCCESS.getCode(),msg);
     }
 

@@ -13,14 +13,14 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import javax.servlet.http.HttpSession;
 
 /**
- * 注意，/manager地址是不能访问的
+ * 注意，/manager地址是不能访问的，这个命名空间是tomcat自带的
  * @program: hustmall
  * @author: yaopeng
  * @create: 2019-10-31 14:19
  **/
 @Controller
-@RequestMapping("/managers/user")
-public class CategoryManagerController {
+@RequestMapping("/manage/user")
+public class UserManageController {
 
     @Autowired
     private IUserService iUserService;

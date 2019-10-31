@@ -81,7 +81,7 @@ public class UserServiceImpl implements IUserService {
             return  ServerResponse.createByErrorMessage("注册失败");
         }
 
-        return ServerResponse.createBySuccess("注册成功");
+        return ServerResponse.createBySuccessMessage("注册成功");
 
     }
 
@@ -110,7 +110,7 @@ public class UserServiceImpl implements IUserService {
             return ServerResponse.createByErrorMessage("参数错误");
         }
 
-        return ServerResponse.createBySuccess("检验成功");
+        return ServerResponse.createBySuccessMessage("检验成功");
     }
 
 
@@ -188,7 +188,7 @@ public class UserServiceImpl implements IUserService {
             int count = userMapper.updatePasswordByUsername(username, md5password);
             //一定要判断是否大于0,可能会出现修改失败的情况
             if (count > 0) {
-                return ServerResponse.createBySuccess("修改密码成功");
+                return ServerResponse.createBySuccessMessage("修改密码成功");
             }
         }else{
             return ServerResponse.createByErrorMessage("token错误，请重新获取重置密码的token");
@@ -216,7 +216,7 @@ public class UserServiceImpl implements IUserService {
         user.setPassword(MD5Util.MD5EncodeUtf8(passwordNew));
         int updastResult = userMapper.updateByPrimaryKeySelective(user);
         if(updastResult > 0){
-            return ServerResponse.createBySuccess("重置密码成功");
+            return ServerResponse.createBySuccessMessage("重置密码成功");
         }
         return ServerResponse.createByErrorMessage("重置密码失败");
 
@@ -268,4 +268,12 @@ public class UserServiceImpl implements IUserService {
 
     }
 
+
+    //校验用户是否为管理员
+    public ServerResponse<String> checkAdminRole(User user){
+        if(user.getRole().intValue() == Const.Role.ROLE_ADMIN){
+            return ServerResponse.createBySuccess();
+        }
+        return ServerResponse.createByError();
+    }
 }
