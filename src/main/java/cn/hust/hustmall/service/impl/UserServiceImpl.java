@@ -24,6 +24,13 @@ public class UserServiceImpl implements IUserService {
     @Autowired
     private UserMapper userMapper;
 
+
+    /**
+     * 登录校验
+     * @param username
+     * @param password
+     * @return
+     */
     @Override
     public ServerResponse<User> login(String username, String password) {
         if( userMapper.checkUsername(username) == 0 ){
@@ -44,6 +51,11 @@ public class UserServiceImpl implements IUserService {
 
     }
 
+    /**
+     * 注册用户信息
+     * @param user
+     * @return
+     */
     @Override
     public ServerResponse<String> register(User user) {
 
@@ -74,7 +86,12 @@ public class UserServiceImpl implements IUserService {
     }
 
 
-    //校验用户名和email
+    /**
+     *  校验用户名和email
+     * @param str
+     * @param type
+     * @return
+     */
     @Override
     public ServerResponse<String> checkValid(String str, String type) {
         if(StringUtils.isNotBlank(type)){
@@ -97,8 +114,13 @@ public class UserServiceImpl implements IUserService {
     }
 
 
+    /**
+     * 忘记密码之得到问题
+     * @param username
+     * @return
+     */
     @Override
-    public ServerResponse<String> forgetGetQuestion(String username) {
+    public ServerResponse<String> selectQuestion(String username) {
         ServerResponse response = this.checkValid(username,Const.USERNAME);
         if(response.isSuccess()){
             return ServerResponse.createByErrorMessage("该用户不存在");
@@ -113,6 +135,13 @@ public class UserServiceImpl implements IUserService {
     }
 
 
+    /**
+     * 忘记密码之检查答案
+     * @param username
+     * @param question
+     * @param answer
+     * @return
+     */
     public ServerResponse<String> checkAnswer(String username, String question, String answer){
         int resultCount = userMapper.checkAnswer(username, question, answer);
         if(resultCount > 0){
@@ -127,7 +156,13 @@ public class UserServiceImpl implements IUserService {
         return ServerResponse.createByErrorMessage("问题的答案错误");
     }
 
-
+    /**
+     * 忘记密码之重置密码
+     * @param username
+     * @param passwordNew
+     * @param forgetToken
+     * @return
+     */
     public ServerResponse<String> forgerRestPassword(String username,String passwordNew, String forgetToken) {
         //1.检查用户名
         ServerResponse<String> checkValid = this.checkValid(username, Const.USERNAME);
@@ -162,7 +197,13 @@ public class UserServiceImpl implements IUserService {
     }
 
 
-
+    /**
+     * 登录状态下重置密码
+     * @param passwordOld
+     * @param passwordNew
+     * @param user
+     * @return
+     */
     public ServerResponse<String> resetPassword(String passwordOld, String passwordNew, User user){
         //1.检查用户和其对应的密码正不正确，为了防止横向越权和password来撞库和非本人来修改密码,
         // 要校验一下这个用户的旧密码,一定要指定是这个用户,否则通过password来撞库也能返回count >0
@@ -179,6 +220,51 @@ public class UserServiceImpl implements IUserService {
         }
         return ServerResponse.createByErrorMessage("重置密码失败");
 
+    }
+
+    /**
+     * 更新用户信息
+     * @param user
+     * @return
+     */
+
+    public ServerResponse<User> updateInfomation(User user){
+        //1.不能修改用户名
+        //2.检查email是否存在，若email存在数据库中且不属于当前用户，则不通过
+        int count = userMapper.checkEmailByUserId(user.getEmail(), user.getId());
+        if(count > 0){
+            return ServerResponse.createByErrorMessage("该email已经存在，请重新输入");
+        }
+        //3.更新信息,这里最好别用Beanutils的属性copy,因为像role这类的属性是不能被更改的
+        //updateByPrimaryKeySelective是根据id来更新的，所以必须传入，也可以设计一个DTO对象，前端传入DTO对象，只有四个属性段，
+        User updateUser = new User();
+        updateUser.setId(user.getId());
+        updateUser.setEmail(user.getEmail());
+        updateUser.setPhone(user.getPhone());
+        updateUser.setAnswer(user.getAnswer());
+        updateUser.setQuestion(user.getQuestion());
+        int updateCount = userMapper.updateByPrimaryKeySelective(updateUser);
+        if(updateCount > 0 ){
+            return ServerResponse.createBySuccess("更新个人信息成功",updateUser);
+        }
+        return ServerResponse.createByErrorMessage("更新个人信息失败");
+
+    }
+
+    /**
+     * 得到当前用户信息
+     * @param userId
+     * @return
+     */
+    public ServerResponse<User> getInfomation(Integer userId){
+
+        User user = userMapper.selectByPrimaryKey(userId);
+        if(user == null){
+            return ServerResponse.createByErrorMessage("找不到当前用户");
+        }
+
+        user.setPassword(StringUtils.EMPTY);
+        return ServerResponse.createBySuccess(user);
 
     }
 

@@ -7,7 +7,7 @@ package cn.hust.hustmall.common;
  **/
 public class Const {
 
-    public  static final String GCURRENT_USER = "GCURRENT_USER";
+    public  static final String CURRENT_USER = "CURRENT_USER";
     public  static final String USERNAME = "username";
     public  static final String EMAIL = "email";
 
