@@ -1,6 +1,7 @@
 package cn.hust.hustmall.service;
 
 import cn.hust.hustmall.common.ServerResponse;
+import cn.hust.hustmall.dto.ProductDetailDTO;
 import cn.hust.hustmall.pojo.Product;
 
 /**
@@ -13,4 +14,5 @@ public interface IProductService {
     ServerResponse<String> saveOrUpdateProduct(Product product);
 
     ServerResponse<String> setSaleStatus(Integer productId, Integer status);
+    ServerResponse<ProductDetailDTO> manageProductDetail(Integer productId);
 }

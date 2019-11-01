@@ -145,8 +145,14 @@
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>4.12</version>
-      <!--<scope>test</scope>-->
     </dependency>
+
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <version>1.16.10</version>
+    </dependency>
+
 
     <dependency>
       <groupId>joda-time</groupId>
@@ -235,11 +241,13 @@
       <artifactId>core</artifactId>
       <version>2.1</version>
     </dependency>
+
     <dependency>
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
       <version>2.3.1</version>
     </dependency>
+
     <dependency>
       <groupId>org.hamcrest</groupId>
       <artifactId>hamcrest-core</artifactId>
@@ -251,6 +259,8 @@
       <artifactId>jedis</artifactId>
       <version>2.9.0</version>
     </dependency>
+
+
   </dependencies>
 
   <build>
@@ -305,6 +315,7 @@
           <artifactId>maven-war-plugin</artifactId>
           <version>3.2.2</version>
         </plugin>
+
         <plugin>
           <artifactId>maven-install-plugin</artifactId>
           <version>2.5.2</version>

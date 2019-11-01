@@ -8,27 +8,31 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Properties;
 
+
 /**
- * Created by geely
- */
+ * @program: hustmall
+ * @author: yaopeng
+ * @create: 2019-11-01 11:30
+ **/
 public class PropertiesUtil {
 
-    private static Logger logger = LoggerFactory.getLogger(PropertiesUtil.class);
+    private static Logger  logger = LoggerFactory.getLogger(PropertiesUtil.class);
 
-    private static Properties props;
+    private static Properties pros;
 
-    static {
+    static{
         String fileName = "mmall.properties";
-        props = new Properties();
+        pros = new Properties();
         try {
-            props.load(new InputStreamReader(PropertiesUtil.class.getClassLoader().getResourceAsStream(fileName),"UTF-8"));
+            pros.load(new InputStreamReader(PropertiesUtil.class.getClassLoader().getResourceAsStream(fileName),"utf-8"));
         } catch (IOException e) {
-            logger.error("配置文件读取异常",e);
+            logger.error("读取配置文件错误，{}",e);
         }
     }
 
     public static String getProperty(String key){
-        String value = props.getProperty(key.trim());
+        //key.trim()是为了消除不必要的空格，以免造成错误
+        String value = pros.getProperty(key.trim());
         if(StringUtils.isBlank(value)){
             return null;
         }
@@ -36,13 +40,16 @@ public class PropertiesUtil {
     }
 
     public static String getProperty(String key,String defaultValue){
-
-        String value = props.getProperty(key.trim());
+        //key.trim()是为了消除不必要的空格，以免造成错误
+        String value = pros.getProperty(key.trim());
         if(StringUtils.isBlank(value)){
-            value = defaultValue;
+            return defaultValue;
         }
         return value.trim();
     }
+
+
+
 
 
 

@@ -2,7 +2,9 @@ package cn.hust.hustmall.service.impl;
 
 import cn.hust.hustmall.common.ResponseCode;
 import cn.hust.hustmall.common.ServerResponse;
+import cn.hust.hustmall.converter.Product2ProductDetailDTO;
 import cn.hust.hustmall.dao.ProductMapper;
+import cn.hust.hustmall.dto.ProductDetailDTO;
 import cn.hust.hustmall.pojo.Product;
 import cn.hust.hustmall.service.IProductService;
 import org.apache.commons.lang3.StringUtils;
@@ -21,7 +23,7 @@ public class ProducrServiceImpl implements IProductService {
 
 
     @Autowired
-    private ProductMapper productMapper;
+    private  ProductMapper productMapper;
 
     /**
      * 新增或者更新产品
@@ -81,6 +83,26 @@ public class ProducrServiceImpl implements IProductService {
         }else{
             return ServerResponse.createByErrorMessage("修改产品状态失败");
         }
+
+    }
+
+
+    public ServerResponse<ProductDetailDTO> manageProductDetail(Integer productId){
+
+        //1.判断productId是否为空
+        if(productId == null){
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.ILLEGAL_ARGUMENT.getCode(),ResponseCode.ILLEGAL_ARGUMENT.getDesc());
+        }
+
+        //2.判断查出来的产品是否为空
+        Product product = productMapper.selectByPrimaryKey(productId);
+        if(product == null){
+            return ServerResponse.createByErrorMessage("产品已下架或者删除");
+        }
+
+        //3.属性复制给productDetailDTO
+        ProductDetailDTO productDetailDTO = Product2ProductDetailDTO.convert(product);
+        return ServerResponse.createBySuccess(productDetailDTO);
 
 
     }
