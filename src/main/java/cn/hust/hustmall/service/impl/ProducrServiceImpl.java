@@ -11,12 +11,12 @@ import cn.hust.hustmall.pojo.Product;
 import cn.hust.hustmall.service.IProductService;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 
 /**
@@ -136,17 +136,17 @@ public class ProducrServiceImpl implements IProductService {
         // 不是简单的集合，所以需要从productList中获取分页数据
         List<Product> productList = productMapper.selectList();
 
-       /* List<ProductListDTO> productListDTOList = Lists.newArrayList();
+        List<ProductListDTO> productListDTOList = Lists.newArrayList();
         for(Product product : productList){
             ProductListDTO productListDTO = Product2ProductListDTO.convert(product);
             productListDTOList.add(productListDTO);
-        }*/
+        }
         /**
          用lambda表达式实现
          */
-        List<ProductListDTO> productListDTOList = productList.stream()
+       /* List<ProductListDTO> productListDTOList = productList.stream()
                 .map(e -> Product2ProductListDTO.convert(e))
-                .collect(Collectors.toList());
+                .collect(Collectors.toList());*/
 
         //3.pageIngo 收尾，首先用sql查询出来的进行分页，然后设置pageinfo的list
 
@@ -167,9 +167,15 @@ public class ProducrServiceImpl implements IProductService {
         PageHelper.startPage(pageNum,pageSize);
         String name = new StringBuilder().append("%").append(productName).append("%").toString();
         List<Product> productList = productMapper.searchByIdAndProductName(name, productId);
-        List<ProductListDTO> productListDTOList = productList.stream()
+       /* List<ProductListDTO> productListDTOList = productList.stream()
                 .map(e -> Product2ProductListDTO.convert(e))
-                .collect(Collectors.toList());
+                .collect(Collectors.toList());*/
+
+        List<ProductListDTO> productListDTOList = Lists.newArrayList();
+        for(Product product : productList){
+            ProductListDTO productListDTO = Product2ProductListDTO.convert(product);
+            productListDTOList.add(productListDTO);
+        }
         PageInfo pageInfo = new PageInfo(productList);
         pageInfo.setList(productListDTOList);
         return ServerResponse.createBySuccess(pageInfo);
