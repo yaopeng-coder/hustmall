@@ -4,11 +4,13 @@ import cn.hust.hustmall.dao.CategoryMapper;
 import cn.hust.hustmall.dto.ProductListDTO;
 import cn.hust.hustmall.pojo.Product;
 import cn.hust.hustmall.util.PropertiesUtil;
+import com.google.common.collect.Lists;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import java.util.List;
 
 /**
  * @program: hustmall
@@ -40,7 +42,18 @@ public class Product2ProductListDTO {
 
          //1.需要赋值imageHost
          productListDTO.setImageHost(PropertiesUtil.getProperty("ftp.server.http.prefix"));
-
             return productListDTO;
      }
+
+    public static List<ProductListDTO> convert(List<Product> productList){
+
+         List<ProductListDTO> productListDTOList = Lists.newArrayList();
+        for (Product product:productList) {
+                productListDTOList.add(convert(product));
+            
+        }
+
+        return productListDTOList;
+    }
+
 }

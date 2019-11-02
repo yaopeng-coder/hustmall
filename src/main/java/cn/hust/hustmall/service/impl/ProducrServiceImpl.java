@@ -1,13 +1,17 @@
 package cn.hust.hustmall.service.impl;
 
+import cn.hust.hustmall.common.Const;
 import cn.hust.hustmall.common.ResponseCode;
 import cn.hust.hustmall.common.ServerResponse;
 import cn.hust.hustmall.converter.Product2ProductDetailDTO;
 import cn.hust.hustmall.converter.Product2ProductListDTO;
+import cn.hust.hustmall.dao.CategoryMapper;
 import cn.hust.hustmall.dao.ProductMapper;
 import cn.hust.hustmall.dto.ProductDetailDTO;
 import cn.hust.hustmall.dto.ProductListDTO;
+import cn.hust.hustmall.pojo.Category;
 import cn.hust.hustmall.pojo.Product;
+import cn.hust.hustmall.service.ICategoryService;
 import cn.hust.hustmall.service.IProductService;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
@@ -32,6 +36,12 @@ public class ProducrServiceImpl implements IProductService {
 
     @Autowired
     private  ProductMapper productMapper;
+
+    @Autowired
+    private CategoryMapper categoryMapper;
+
+    @Autowired
+    private ICategoryService iCategoryService;
 
     /**
      * 新增或者更新产品
@@ -171,14 +181,93 @@ public class ProducrServiceImpl implements IProductService {
                 .map(e -> Product2ProductListDTO.convert(e))
                 .collect(Collectors.toList());*/
 
-        List<ProductListDTO> productListDTOList = Lists.newArrayList();
-        for(Product product : productList){
-            ProductListDTO productListDTO = Product2ProductListDTO.convert(product);
-            productListDTOList.add(productListDTO);
-        }
+        List<ProductListDTO> productListDTOList = Product2ProductListDTO.convert(productList);
         PageInfo pageInfo = new PageInfo(productList);
         pageInfo.setList(productListDTOList);
         return ServerResponse.createBySuccess(pageInfo);
 
     }
+
+
+    /**
+     * 用户查看商品详情
+     * @param productId
+     * @return
+     */
+    public ServerResponse<ProductDetailDTO>  productDetail(Integer productId){
+
+        if(productId == null){
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.ILLEGAL_ARGUMENT.getCode(),ResponseCode.ILLEGAL_ARGUMENT.getDesc());
+        }
+
+        Product product = productMapper.selectByPrimaryKey(productId);
+        if(product == null || product.getStatus()== Const.productStatus.OFF_SALE.getCode()){
+            return ServerResponse.createByErrorMessage("产品已经删除或者不存在");
+        }
+
+        ProductDetailDTO productDetailDTO = Product2ProductDetailDTO.convert(product);
+        return ServerResponse.createBySuccess(productDetailDTO);
+
+    }
+
+
+    /**
+     * 用户根据categoryId或者关键字模糊查询商品并动态排序
+     * @param categoryId
+     * @param keyword
+     * @param pageNum
+     * @param pageSize
+     * @param orderBy
+     * @return
+     */
+    public ServerResponse<PageInfo> productList(Integer categoryId, String keyword, Integer pageNum, Integer pageSize, String orderBy){
+
+        List<Integer> categoeyIdList = Lists.newArrayList();
+        //1.若categoryId，keyword均为空，参数错误
+        //注意一定要用isBlank来判断，能防止空格，一般不输入显示“”，而不是Null
+        if(categoryId == null && StringUtils.isBlank(keyword)){
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.ILLEGAL_ARGUMENT.getCode(),ResponseCode.ILLEGAL_ARGUMENT.getDesc());
+        }
+        //2.当categoryId存在时，
+        if(categoryId != null){
+            //2.1若对应的category和keyword均为空且不为根节点，返回一个空的结果集，不报错
+            Category category = categoryMapper.selectByPrimaryKey(categoryId);
+            if(categoryId != 0 && category == null && StringUtils.isBlank(keyword)){
+                PageHelper.startPage(pageNum,pageSize);
+                PageInfo pageInfo = new PageInfo();
+                return ServerResponse.createBySuccess(pageInfo);
+            }
+            //2.2当category不为空或为根节点时，根据其得到的categoryID递归查找子节点
+            if(category != null || categoryId == 0){
+                categoeyIdList = iCategoryService.getCategoryAndDeepCategoryById(categoryId).getData();
+            }
+
+
+        }
+
+        //3.若关键字存在，拼接关键字
+        if(StringUtils.isNotBlank(keyword)){
+            keyword = new StringBuffer().append("%").append(keyword).append("%").toString();
+        }
+
+        //4.若orderby存在，设置pagehelper
+        PageHelper.startPage(pageNum,pageSize);
+        if(StringUtils.isNotBlank(orderBy)){
+            if(Const.PRICE_ASC_DESC.contains(orderBy)){
+                String[] orderByArrays = orderBy.split("_");
+                PageHelper.orderBy(orderByArrays[0]+" "+orderByArrays[1]);
+
+            }
+        }
+
+        //5.根据List<Integer> categoryIdList和keyword查找数据库，注意集合如果没有值的话，其不代表为null,并且keyword也要防止空格，所以也要用三元运算符值为null
+        List<Product> productList = productMapper.selectByNameAndCategoryIds(StringUtils.isBlank(keyword)?null:keyword, categoeyIdList.size()==0?null:categoeyIdList);
+        //6.转换对象
+        List<ProductListDTO> productListDTOList = Product2ProductListDTO.convert(productList);
+        PageInfo pageInfo = new PageInfo(productList);
+        pageInfo.setList(productListDTOList);
+        return ServerResponse.createBySuccess(pageInfo);
+
+    }
+
 }
