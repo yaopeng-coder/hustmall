@@ -27,6 +27,7 @@ public class PropertiesUtil {
             pros.load(new InputStreamReader(PropertiesUtil.class.getClassLoader().getResourceAsStream(fileName),"utf-8"));
         } catch (IOException e) {
             logger.error("读取配置文件错误，{}",e);
+
         }
     }
 
