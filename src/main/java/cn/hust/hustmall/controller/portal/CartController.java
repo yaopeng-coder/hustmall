@@ -76,4 +76,91 @@ public class CartController {
         return iCartService.deleteCart(user.getId(),productIds);
     }
 
+
+    /**
+     * 购物车列表
+     * @param session
+     * @return
+     */
+    @RequestMapping("/list.do")
+    public ServerResponse<CartVO> list(HttpSession session){
+        User user = (User)session.getAttribute(Const.CURRENT_USER);
+        if(user == null){
+            return ServerResponse.createBySuccess();
+        }
+    return iCartService.list(user.getId());
+    }
+
+    /**
+     * 购物车全选
+     * @param session
+     * @return
+     */
+    @RequestMapping("/select_all.do")
+    public ServerResponse<CartVO> selectAll(HttpSession session){
+        User user = (User)session.getAttribute(Const.CURRENT_USER);
+        if(user == null){
+            return ServerResponse.createBySuccess();
+        }
+        return iCartService.selectOrUnSelect(user.getId(),null,Const.Cart.CHECKED);
+    }
+
+
+    /**
+     * 购物车全反选
+     * @param session
+     * @return
+     */
+    @RequestMapping("/un_select_all.do")
+    public ServerResponse<CartVO> unSelectAll(HttpSession session){
+        User user = (User)session.getAttribute(Const.CURRENT_USER);
+        if(user == null){
+            return ServerResponse.createBySuccess();
+        }
+        return iCartService.selectOrUnSelect(user.getId(),null,Const.Cart.UN_CHECKED);
+    }
+
+    /**
+     * 购物车单选
+     * @param session
+     * @param productId
+     * @return
+     */
+    @RequestMapping("/select.do")
+    public ServerResponse<CartVO> select(HttpSession session,Integer productId){
+        User user = (User)session.getAttribute(Const.CURRENT_USER);
+        if(user == null){
+            return ServerResponse.createBySuccess();
+        }
+        return iCartService.selectOrUnSelect(user.getId(),productId,Const.Cart.CHECKED);
+    }
+
+    /**
+     * 购物车单不选
+     * @param session
+     * @param productId
+     * @return
+     */
+    @RequestMapping("/un_select.do")
+    public ServerResponse<CartVO> unSelect(HttpSession session,Integer productId){
+        User user = (User)session.getAttribute(Const.CURRENT_USER);
+        if(user == null){
+            return ServerResponse.createBySuccess();
+        }
+        return iCartService.selectOrUnSelect(user.getId(),productId,Const.Cart.UN_CHECKED);
+    }
+
+    /**
+     * 购物车产品总数量
+     * @param session
+     * @return
+     */
+    @RequestMapping("/get_cart_product_count.do")
+    public ServerResponse<Integer> getCartProductCount(HttpSession session){
+        User user = (User)session.getAttribute(Const.CURRENT_USER);
+        if(user == null){
+            return ServerResponse.createBySuccess(0);
+        }
+        return iCartService.getCartProductCount(user.getId());
+    }
 }

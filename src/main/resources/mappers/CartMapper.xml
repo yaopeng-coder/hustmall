@@ -145,4 +145,39 @@
   <select id="checkCartCheckedByUserId" resultType="int" parameterType="int">
     SELECT count(1) from mmall_cart where checked = 0 and user_id = #{userId}
   </select>
+
+
+  <delete id="delectProductByUserIdProductIds" parameterType="map" >
+    DELETE
+    FROM  mmall_cart
+    WHERE user_id = #{userId}
+    <if test="productIdList != null">
+      and product_id in
+      <foreach collection="productIdList" item="item" index="index" open="(" separator="," close=")">
+        #{item}
+      </foreach>
+    </if>
+  </delete>
+  
+  
+  <update id="updateCartChecked" parameterType="map" >
+    UPDATE mmall_cart
+    SET checked = #{checked},
+    update_time = now()
+    where user_id = #{userId}
+    <if test="productId != null">
+      and product_id = #{productId}
+    </if>
+
+  </update>
+  
+  
+  <select id="getCartCountByUserId" parameterType="int" resultType="int">
+    SELECT
+    IFNULL(sum(quantity),0) AS COUNT
+    FROM mmall_cart
+    WHERE user_id = #{userId}
+  </select>
+
+
 </mapper>

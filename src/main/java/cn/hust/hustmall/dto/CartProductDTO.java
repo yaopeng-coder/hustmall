@@ -37,7 +37,7 @@ public class CartProductDTO {
     @JsonProperty("productStatus")
     private Integer status;
 
-    private Integer productTotalPrice;
+    private BigDecimal productTotalPrice;
 
     @JsonProperty("productStock")
     private Integer stock;

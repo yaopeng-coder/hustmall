@@ -68,8 +68,6 @@ public class CartServiceImpl implements ICartService{
             cart.setQuantity(count);
             cartMapper.updateByPrimaryKeySelective(cart);
         }
-
-        CartVO cartVO = getCartVOLimit(userId);
         return this.list(userId);
 
     }
@@ -94,8 +92,8 @@ public class CartServiceImpl implements ICartService{
                 cartMapper.updateByPrimaryKeySelective(cart);
         }
 
-        CartVO cartVOLimit = this.getCartVOLimit(userId);
-        return ServerResponse.createBySuccess(cartVOLimit);
+
+        return this.list(userId);
 
     }
 
@@ -115,8 +113,7 @@ public class CartServiceImpl implements ICartService{
         //2.删除产品，成功再返回视图更新对象
         int count = cartMapper.delectProductByUserIdProductIds(userId, productIdList);
         if(count > 0){
-            CartVO cartVOLimit = this.getCartVOLimit(userId);
-            return ServerResponse.createBySuccess(cartVOLimit);
+            return this.list(userId);
         }
 
         return ServerResponse.createByErrorMessage("删除失败");
@@ -125,7 +122,34 @@ public class CartServiceImpl implements ICartService{
     }
 
 
+    /**
+     * 购物车全选，全反选，单选，单反选
+     * @param userId
+     * @param productId
+     * @param checked
+     * @return
+     */
+    public ServerResponse<CartVO> selectOrUnSelect(Integer userId,Integer productId,Integer checked){
+            cartMapper.updateCartChecked(userId,productId,checked);
+            return this.list(userId);
+    }
 
+
+    /**
+     * 购物车产品数量
+     * @param userId
+     * @return
+     */
+    public ServerResponse<Integer> getCartProductCount(Integer userId) {
+            if(userId == null){
+                return ServerResponse.createBySuccess(0);
+            }
+            //注意，sql语句用sum来计数时，当userID不存在时，会返回null,所以要用IFNULL来将Null转为0
+        int count = cartMapper.getCartCountByUserId(userId);
+            return ServerResponse.createBySuccess(count);
+
+
+    }
 
     /**
      * 得到某个用户的购物车列表
@@ -166,9 +190,10 @@ public class CartServiceImpl implements ICartService{
                     }
                     //4.计算价格
                     BigDecimal total = BigDecimalUtil.mul(cartProductDTO.getQuantity(),product.getPrice().doubleValue());
+                    cartProductDTO.setProductTotalPrice(total);
+                    cartProductDTO.setProductChecked(cart.getChecked());
                     //5.判断CartProductDTO是否选中，选中将刚刚计算的价格加到总价，并添加至List
                     if(cart.getChecked() == Const.Cart.CHECKED){
-                        cartProductDTO.setProductChecked(cart.getChecked());
                         cartTotalPrice = BigDecimalUtil.add(cartTotalPrice.doubleValue(),total.doubleValue());
                     }
                 }
