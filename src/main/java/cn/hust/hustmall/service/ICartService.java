@@ -11,4 +11,6 @@ import cn.hust.hustmall.vo.CartVO;
 public interface ICartService {
 
     ServerResponse<CartVO> addCart(Integer userId, Integer productId, Integer count);
+    ServerResponse<CartVO> updateCart(Integer userId, Integer productId,Integer count);
+    ServerResponse<CartVO> deleteCart(Integer userId, String productIds);
 }

@@ -12,12 +12,12 @@ import cn.hust.hustmall.service.ICartService;
 import cn.hust.hustmall.util.BigDecimalUtil;
 import cn.hust.hustmall.util.PropertiesUtil;
 import cn.hust.hustmall.vo.CartVO;
+import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -38,6 +38,14 @@ public class CartServiceImpl implements ICartService{
     @Autowired
     private ProductMapper productMapper;
 
+
+    /**
+     * 购物车添加商品
+     * @param userId
+     * @param productId
+     * @param count
+     * @return
+     */
     public ServerResponse<CartVO> addCart(Integer userId, Integer productId,Integer count){
 
         //1.判断参数
@@ -66,12 +74,64 @@ public class CartServiceImpl implements ICartService{
 
     }
 
+    /**
+     * 更新购物车某个产品数量
+     * @param userId
+     * @param productId
+     * @param count
+     * @return
+     */
+    public ServerResponse<CartVO> updateCart(Integer userId, Integer productId,Integer count){
+        //1.判断参数
+        if(productId == null || count == null){
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.ILLEGAL_ARGUMENT.getCode(), ResponseCode.ILLEGAL_ARGUMENT.getDesc());
+        }
 
-    public ServerResponse<CartVO> list(Integer userId){
-        CartVO cartVO = getCartVOLimit(userId);
-        return ServerResponse.createBySuccess(cartVO);
+        //2.判断cart是否为空,不为空则更新购物车
+        Cart cart = cartMapper.selectByUserIdProductId(userId, productId);
+        if(cart != null){
+                cart.setQuantity(count);
+                cartMapper.updateByPrimaryKeySelective(cart);
+        }
+
+        CartVO cartVOLimit = this.getCartVOLimit(userId);
+        return ServerResponse.createBySuccess(cartVOLimit);
+
     }
 
+    /**
+     * 删除购物车某个产品数量
+     * @param userId
+     * @param productIds
+     * @return
+     */
+    public ServerResponse<CartVO> deleteCart(Integer userId, String productIds) {
+        //1.将参数string转换成LIST
+        List<String> productIdList = Splitter.on(",").splitToList(productIds);
+        if(CollectionUtils.isEmpty(productIdList)){
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.ILLEGAL_ARGUMENT.getCode(), ResponseCode.ILLEGAL_ARGUMENT.getDesc());
+        }
+
+        //2.删除产品，成功再返回视图更新对象
+        int count = cartMapper.delectProductByUserIdProductIds(userId, productIdList);
+        if(count > 0){
+            CartVO cartVOLimit = this.getCartVOLimit(userId);
+            return ServerResponse.createBySuccess(cartVOLimit);
+        }
+
+        return ServerResponse.createByErrorMessage("删除失败");
+
+
+    }
+
+
+
+
+    /**
+     * 得到某个用户的购物车列表
+     * @param userId
+     * @return
+     */
     public CartVO  getCartVOLimit(Integer userId){
 
         //1.这里的cart表相当于cartItem,每个cart只对应一个产品，对每个cart需要封装一个CartProductDTO对象
@@ -127,6 +187,22 @@ public class CartServiceImpl implements ICartService{
         return cartVO;
     }
 
+
+    /**
+     * 得到某个用户的购物车列表视图对象
+     * @param userId
+     * @return
+     */
+    public ServerResponse<CartVO> list(Integer userId){
+        CartVO cartVO = getCartVOLimit(userId);
+        return ServerResponse.createBySuccess(cartVO);
+    }
+
+    /**
+     * 判断购物车是否是全选
+     * @param userId
+     * @return
+     */
     public boolean getAllCheckedStatus(Integer userId){
         if(userId == null){
             return  false;
