@@ -278,6 +278,7 @@
       </plugin>
 
       <!-- geelynote maven的核心插件之-complier插件默认只支持编译Java 1.4，因此需要加上支持高版本jre的配置，在pom.xml里面加上 增加编译插件 -->
+      <!--这个插件很重要，加载自己的jar包，至于为什么放在Lib文件下，因为发布在服务器上时Jar包都在lib下-->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
