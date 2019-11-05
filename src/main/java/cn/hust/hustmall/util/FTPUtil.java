@@ -41,7 +41,7 @@ public class FTPUtil {
             log.info("开始连接服务器，准备上传文件");
             FTPUtil ftpUtil = new FTPUtil(ftpServerIp,21,ftpUser,ftpPass);
             //2.上传文件
-         boolean result = ftpUtil.upload("img", fileList);
+         boolean result = ftpUtil.upload("", fileList);
          log.info("文件上传ftp服务器结束");
             return result;
 
