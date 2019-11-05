@@ -11,4 +11,6 @@ import java.util.Map;
  **/
 public interface IOrderService {
     ServerResponse<Map> pay(Integer userId, Long orderNo, String path);
+    ServerResponse<String> aliPayBack(Map<String,String> params );
+    ServerResponse<Boolean> queryOrderPayStatus(Long orderNo,Integer userId);
 }

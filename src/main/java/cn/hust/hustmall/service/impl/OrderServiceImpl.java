@@ -1,12 +1,16 @@
 package cn.hust.hustmall.service.impl;
 
+import cn.hust.hustmall.common.Const;
 import cn.hust.hustmall.common.ServerResponse;
 import cn.hust.hustmall.dao.OrderItemMapper;
 import cn.hust.hustmall.dao.OrderMapper;
+import cn.hust.hustmall.dao.PayInfoMapper;
 import cn.hust.hustmall.pojo.Order;
 import cn.hust.hustmall.pojo.OrderItem;
+import cn.hust.hustmall.pojo.PayInfo;
 import cn.hust.hustmall.service.IOrderService;
 import cn.hust.hustmall.util.BigDecimalUtil;
+import cn.hust.hustmall.util.DateTimeUtil;
 import cn.hust.hustmall.util.FTPUtil;
 import cn.hust.hustmall.util.PropertiesUtil;
 import com.alipay.api.AlipayResponse;
@@ -47,6 +51,9 @@ public class OrderServiceImpl implements IOrderService {
     @Autowired
     private OrderItemMapper orderItemMapper;
 
+    @Autowired
+    private PayInfoMapper payInfoMapper;
+
     private static final Logger log = LoggerFactory.getLogger(OrderServiceImpl.class);
 
     // 支付宝当面付2.0服务
@@ -66,6 +73,13 @@ public class OrderServiceImpl implements IOrderService {
 
     }
 
+    /**
+     * 订单支付
+     * @param userId
+     * @param orderNo
+     * @param path
+     * @return
+     */
     public ServerResponse<Map> pay(Integer userId,Long orderNo,String path) {
 
         Order order = orderMapper.selectByUserIdOrderNo(userId, orderNo);
@@ -183,5 +197,70 @@ public class OrderServiceImpl implements IOrderService {
             }
             log.info("body:" + response.getBody());
         }
+    }
+
+
+    /**
+     * 支付回调参数验证
+     * @param params
+     * @return
+     */
+    public ServerResponse aliPayBack(Map<String,String> params ){
+
+        //1.得到订单号，交易状态，支付宝交易号
+        String orderNo = params.get("out_trade_no");
+        String tradeStatus = params.get("trade_status");
+        String tradeNo = params.get("trade_no");
+
+        //2.判断订单是否存在
+        Order order = orderMapper.selectByOrderNo(Long.parseLong(orderNo));
+        if(order == null){
+            return ServerResponse.createByErrorMessage("该订单不是hustmall商城的订单");
+        }
+
+        //3.判断订单状态是否已经支付
+        if(order.getStatus() != Const.orderStatusEnum.NOT_PAY.getCode()){
+            return ServerResponse.createBySuccess("支付宝重复支付");
+        }
+
+        //4.判断交易状态是否是TRADE_SUCCESS，是则修改订单的订单状态和支付时间
+        if(tradeStatus.equals(Const.AlipayCallback.TRADE_STATUS_TRADE_SUCCESS)){
+            order.setStatus(Const.orderStatusEnum.PAY.getCode());
+            order.setPaymentTime(DateTimeUtil.strToDate(params.get("gmt_payment")));
+            orderMapper.updateByPrimaryKeySelective(order);
+        }
+
+        //5.插入支付信息到数据库
+
+        PayInfo payInfo = new PayInfo();
+        payInfo.setOrderNo(Long.parseLong(orderNo));
+        payInfo.setUserId(order.getUserId());
+        payInfo.setPlatformStatus(tradeStatus); //交易状态
+        payInfo.setPlatformNumber(tradeNo); //支付宝交易号
+        payInfo.setPayPlatform(Const.PayPlatformEnum.ALI_PAY.getCode()); //交易类型
+
+        payInfoMapper.insert(payInfo);
+
+        return ServerResponse.createBySuccess();
+    }
+
+    /**
+     * 查询订单状态，便于前端在用户支付完成后根据后端传回来的true进行跳转页面
+     * @param orderNo
+     * @param userId
+     * @return
+     */
+    public ServerResponse<Boolean> queryOrderPayStatus(Long orderNo,Integer userId){
+
+        Order order = orderMapper.selectByUserIdOrderNo(userId, orderNo);
+        if(order == null){
+            return ServerResponse.createByErrorMessage("该用户没有该订单，查询无效");
+        }
+
+        if(order.getStatus() >= Const.orderStatusEnum.PAY.getCode()){
+            return ServerResponse.createBySuccess(true);
+        }
+        return ServerResponse.createByError();
+
     }
 }
