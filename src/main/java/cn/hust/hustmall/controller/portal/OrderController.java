@@ -126,4 +126,21 @@ public class OrderController {
         return orderService.queryOrderPayStatus(orderNo, currentUser.getId());
 
     }
+
+    /**
+     * 创建订单
+     * @param session
+     * @param shippingId
+     * @return
+     */
+    @RequestMapping("/create.do")
+   public ServerResponse createOrder(HttpSession session, Integer shippingId){
+       //1.判断当前用户是否已登录
+       User currentUser = (User) session.getAttribute(Const.CURRENT_USER);
+       if (currentUser == null) {
+           return ServerResponse.createByErrorMessage("用户未登录");
+       }
+
+        return orderService.createOrder(currentUser.getId(),shippingId);
+   }
 }

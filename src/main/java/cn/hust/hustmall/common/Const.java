@@ -53,7 +53,7 @@ public class Const {
 
     }
 
-    public enum orderStatusEnum{
+    public enum OrderStatusEnum{
 
         CANCEL(0,"已取消"),
         NOT_PAY(10,"未支付"),
@@ -64,7 +64,17 @@ public class Const {
         int  code;
         String  msg;
 
-        orderStatusEnum(int code, String msg){
+        public static OrderStatusEnum byCodeOf(Integer code){
+
+            for(OrderStatusEnum orderStatusEnum : values()){
+                if(orderStatusEnum.code == code){
+                    return orderStatusEnum;
+                }
+            }
+            return null;
+        }
+
+        OrderStatusEnum(int code, String msg){
             this.code = code;
             this.msg = msg;
         }
@@ -102,9 +112,39 @@ public class Const {
         public  int getCode(){
             return this.code;
         }
-
         public  String getMsg(){
             return this.msg;
+        }
+    }
+
+    public enum PaymentTypeEnum{
+
+        ON_LINE(1,"线上支付"),
+        ;
+        int  code;
+        String  msg;
+
+        PaymentTypeEnum(int code, String msg){
+            this.code = code;
+            this.msg = msg;
+        }
+
+        public  int getCode(){
+            return this.code;
+        }
+        public  String getMsg(){
+            return this.msg;
+        }
+
+
+        public static PaymentTypeEnum byCodeOf(Integer code){
+
+            for(PaymentTypeEnum paymentTypeEnum : values()){
+                if(paymentTypeEnum.code == code){
+                    return paymentTypeEnum;
+                }
+            }
+            return null;
         }
     }
 }
