@@ -12,6 +12,7 @@ import cn.hust.hustmall.util.DateTimeUtil;
 import cn.hust.hustmall.util.FTPUtil;
 import cn.hust.hustmall.util.PropertiesUtil;
 import cn.hust.hustmall.vo.OrderItemVO;
+import cn.hust.hustmall.vo.OrderProductVO;
 import cn.hust.hustmall.vo.OrderVO;
 import com.alipay.api.AlipayResponse;
 import com.alipay.api.response.AlipayTradePrecreateResponse;
@@ -278,7 +279,7 @@ public class OrderServiceImpl implements IOrderService {
      * @return
      */
     @Transactional
-    public ServerResponse createOrder(Integer userId,Integer shippingId){
+    public ServerResponse<OrderVO> createOrder(Integer userId,Integer shippingId){
         //1.查出本人购物车所有勾选了的物品
         List<Cart> cartList = cartMapper.selectByUserIdChecked(userId);
         if(CollectionUtils.isEmpty(cartList)){
@@ -289,7 +290,7 @@ public class OrderServiceImpl implements IOrderService {
         long orderNo = this.generateOrderNo();
 
         //3.生成List<OrderItem>，批量插入orderItem
-        List<OrderItem> orderItemList = this.assembleCartList(userId, cartList,orderNo);
+        List<OrderItem> orderItemList = this.assembleCartOrderItemList(userId, cartList,orderNo);
         if(CollectionUtils.isEmpty(orderItemList)){
             return ServerResponse.createByErrorMessage("订单详情不存在");
         }
@@ -329,12 +330,82 @@ public class OrderServiceImpl implements IOrderService {
 
 
     /**
+     * 取消订单
+     * @param userId
+     * @param orderNo
+     * @return
+     */
+    @Transactional
+    public ServerResponse<String> cancel(Integer userId, Long orderNo){
+
+        Order order = orderMapper.selectByUserIdOrderNo(userId, orderNo);
+        if(order == null){
+            return ServerResponse.createByErrorMessage("该用户此订单不存在");
+        }
+
+        if(order.getStatus() != Const.OrderStatusEnum.NOT_PAY.getCode()){
+            return ServerResponse.createByErrorMessage("此订单已经支付，不能取消");
+        }
+
+
+        Order orderNew = new Order();
+        orderNew.setId(order.getId());
+        orderNew.setStatus(Const.OrderStatusEnum.CANCEL.getCode());
+        int count = orderMapper.updateByPrimaryKeySelective(orderNew);
+
+        if(count <=0){
+            return ServerResponse.createByErrorMessage("取消订单失败");
+
+        }
+
+        //增加库存
+        List<OrderItem> orderItemList = orderItemMapper.selectByUserIdOrderNo(userId, orderNo);
+        this.increaseProductStock(orderItemList);
+
+
+        return ServerResponse.createBySuccess();
+
+
+
+    }
+
+
+    /**
+     * 得到购物车已经勾选的产品信息
+     * @param userId
+     * @return
+     */
+    public ServerResponse<OrderProductVO> getOrderCartProduct(Integer userId){
+
+        OrderProductVO orderProductVO = new OrderProductVO();
+        //1.查出购物车选中的物品
+        List<Cart> cartList = cartMapper.selectByUserIdChecked(userId);
+        //2.得到订单详情
+        List<OrderItem> orderItemList = this.assembleCartOrderItemList(userId,cartList,null);
+        if (CollectionUtils.isEmpty(orderItemList)) {
+            return ServerResponse.createBySuccess();
+        }
+        //3.拼装orderVO
+        BigDecimal payment = new BigDecimal("0");
+        for(OrderItem orderItem : orderItemList){
+            BigDecimalUtil.add(payment.doubleValue(),orderItem.getTotalPrice().doubleValue());
+        }
+        orderProductVO.setProductTotalPrice(payment);
+        List<OrderItemVO> orderItemVOList = OrderItem2OrderItemVO.conver(orderItemList);
+        orderProductVO.setOrderItemVOList(orderItemVOList);
+        orderProductVO.setImageHost(PropertiesUtil.getProperty("ftp.server.http.prefix"));
+        return ServerResponse.createBySuccess(orderProductVO);
+
+
+
+    }
+    /**
      * 根据购物车生成订单详情
      * @param userId
      * @param cartList
      * @return
      */
-    private List<OrderItem> assembleCartList(Integer userId, List<Cart> cartList,Long orderNo){
+    private List<OrderItem> assembleCartOrderItemList(Integer userId, List<Cart> cartList, Long orderNo){
 
         List<OrderItem> orderItemList = Lists.newArrayList();
         for(Cart cart: cartList){
@@ -401,6 +472,19 @@ public class OrderServiceImpl implements IOrderService {
             productMapper.updateByPrimaryKeySelective(product);
         }
     }
+
+    /**
+     * 增加每个产品的库存
+     * @param orderItemList
+     */
+    private void increaseProductStock(List<OrderItem> orderItemList){
+        for(OrderItem orderItem : orderItemList){
+            Product product = productMapper.selectByPrimaryKey(orderItem.getProductId());
+            product.setStock(product.getStock() + orderItem.getQuantity());
+            productMapper.updateByPrimaryKeySelective(product);
+        }
+    }
+
 
     /**
      * 清空购物车

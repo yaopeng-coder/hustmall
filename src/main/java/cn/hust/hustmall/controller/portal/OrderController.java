@@ -4,6 +4,7 @@ import cn.hust.hustmall.common.Const;
 import cn.hust.hustmall.common.ServerResponse;
 import cn.hust.hustmall.pojo.User;
 import cn.hust.hustmall.service.IOrderService;
+import cn.hust.hustmall.vo.OrderProductVO;
 import com.alipay.api.AlipayApiException;
 import com.alipay.api.internal.util.AlipaySignature;
 import com.alipay.demo.trade.config.Configs;
@@ -143,4 +144,40 @@ public class OrderController {
 
         return orderService.createOrder(currentUser.getId(),shippingId);
    }
+
+    /**
+     * 取消订单
+     * @param session
+     * @param orderNo
+     * @return
+     */
+    @RequestMapping("/cancel.do")
+    public ServerResponse cancelOrder(HttpSession session, Long orderNo){
+        //1.判断当前用户是否已登录
+        User currentUser = (User) session.getAttribute(Const.CURRENT_USER);
+        if (currentUser == null) {
+            return ServerResponse.createByErrorMessage("用户未登录");
+        }
+
+        return orderService.cancel(currentUser.getId(),orderNo);
+    }
+
+    /**
+     * 得到购物车已经勾选的产品信息，提交订单时使用
+     * @param session
+     * @return
+     */
+    @RequestMapping("/get_order_cart_product.do")
+    public ServerResponse<OrderProductVO> getOrderCartProduct(HttpSession session){
+        //1.判断当前用户是否已登录
+        User currentUser = (User) session.getAttribute(Const.CURRENT_USER);
+        if (currentUser == null) {
+            return ServerResponse.createByErrorMessage("用户未登录");
+        }
+
+        return orderService.getOrderCartProduct(currentUser.getId());
+    }
+
+
+
 }
