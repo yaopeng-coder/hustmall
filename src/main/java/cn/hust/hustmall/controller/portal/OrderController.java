@@ -12,6 +12,7 @@ import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
@@ -176,6 +177,35 @@ public class OrderController {
         }
 
         return orderService.getOrderCartProduct(currentUser.getId());
+    }
+
+    /**
+     * 查看订单详情
+     * @param session
+     * @param orderNo
+     * @return
+     */
+    @RequestMapping("/detail.do")
+    public ServerResponse detail(HttpSession session, Long orderNo){
+        //1.判断当前用户是否已登录
+        User currentUser = (User) session.getAttribute(Const.CURRENT_USER);
+        if (currentUser == null) {
+            return ServerResponse.createByErrorMessage("用户未登录");
+        }
+
+        return orderService.detail(currentUser.getId(),orderNo);
+    }
+
+    @RequestMapping("/list.do")
+    public ServerResponse list(HttpSession session, @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,
+                               @RequestParam(value = "pageSize", defaultValue = "10")  Integer pageSize){
+        //1.判断当前用户是否已登录
+        User currentUser = (User) session.getAttribute(Const.CURRENT_USER);
+        if (currentUser == null) {
+            return ServerResponse.createByErrorMessage("用户未登录");
+        }
+
+        return orderService.getOrderList(currentUser.getId(),pageNum,pageSize);
     }
 
 

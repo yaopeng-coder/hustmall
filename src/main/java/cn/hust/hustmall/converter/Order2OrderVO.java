@@ -2,12 +2,21 @@ package cn.hust.hustmall.converter;
 
 
 import cn.hust.hustmall.common.Const;
+import cn.hust.hustmall.dao.OrderItemMapper;
 import cn.hust.hustmall.pojo.Order;
+import cn.hust.hustmall.pojo.OrderItem;
 import cn.hust.hustmall.util.DateTimeUtil;
 import cn.hust.hustmall.util.PropertiesUtil;
+import cn.hust.hustmall.vo.OrderItemVO;
 import cn.hust.hustmall.vo.OrderVO;
 import cn.hust.hustmall.vo.ShippingVO;
+import com.google.common.collect.Lists;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import javax.annotation.PostConstruct;
+import java.util.List;
 
 
 /**
@@ -15,7 +24,18 @@ import org.springframework.beans.BeanUtils;
  * @author: yaopeng
  * @create: 2019-11-06 18:36
  **/
+@Component
 public class Order2OrderVO {
+
+    @Autowired
+    private OrderItemMapper orderItemMapper;
+
+    private static OrderItemMapper mapper;
+
+    @PostConstruct
+    public void init(){
+        mapper = orderItemMapper;
+    }
 
     public static OrderVO conver(Order order){
 
@@ -45,4 +65,30 @@ public class Order2OrderVO {
 
 
     }
+
+
+    public static OrderVO assembelOrderVO(Order order , List<OrderItem> orderItemList){
+        OrderVO orderVO = conver(order);
+        List<OrderItemVO> orderItemVOList = OrderItem2OrderItemVO.conver(orderItemList);
+        orderVO.setOrderItemVOList(orderItemVOList);
+        return orderVO;
+    }
+
+    public static List<OrderVO> assembelOrderVOList(List<Order> orderList,Integer userId){
+
+       List<OrderVO> orderVOList = Lists.newArrayList();
+       for(Order order : orderList){
+           List<OrderItem> orderItemList = Lists.newArrayList();
+           if(userId == null){
+             orderItemList = mapper.selectByOrderNo(order.getOrderNo());
+           }else{
+              orderItemList = mapper.selectByUserIdOrderNo(userId, order.getOrderNo());
+           }
+           OrderVO orderVO = Order2OrderVO.assembelOrderVO(order, orderItemList);
+           orderVOList.add(orderVO);
+
+       }
+       return orderVOList;
+    }
+
 }

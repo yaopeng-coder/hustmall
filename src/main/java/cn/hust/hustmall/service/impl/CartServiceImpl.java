@@ -204,7 +204,7 @@ public class CartServiceImpl implements ICartService{
         //5.判断购物车是否全选，取数据库里查询即可，反逻辑，只要找不到数据里的cart的checked均为0的情况即可
          cartVO.setAllChecked(this.getAllCheckedStatus(userId));
 
-        //6.为cartvo设置总价，list,和imageHost
+        //6.为cartvo设置总价，getOrderList,和imageHost
         cartVO.setCartTotalPrice(cartTotalPrice);
         cartVO.setProductDTOList(cartProductDTOList);
         cartVO.setImageHost(PropertiesUtil.getProperty("ftp.server.http.prefix"));

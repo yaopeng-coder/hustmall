@@ -3,6 +3,7 @@ package cn.hust.hustmall.service;
 import cn.hust.hustmall.common.ServerResponse;
 import cn.hust.hustmall.vo.OrderProductVO;
 import cn.hust.hustmall.vo.OrderVO;
+import com.github.pagehelper.PageInfo;
 
 import java.util.Map;
 
@@ -21,4 +22,10 @@ public interface IOrderService {
     ServerResponse<String> cancel(Integer userId, Long orderNo);
 
     ServerResponse<OrderProductVO> getOrderCartProduct(Integer userId);
+    ServerResponse<OrderVO> detail(Integer userId,Long orderNo);
+    ServerResponse<PageInfo> getOrderList(Integer userId, Integer pageNum, Integer pageSize);
+    ServerResponse<PageInfo> manageOrderList(Integer pageNum, Integer pageSize);
+    ServerResponse<PageInfo> manageSearchOrder(Long orderNo,Integer pageNum, Integer pageSize);
+    ServerResponse<OrderVO> manageOrderDetail(Long orderNo);
+    ServerResponse<String> manageSendGoods(Long orderNo);
 }

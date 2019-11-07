@@ -173,6 +173,16 @@
     and order_no = #{orderNo}
 
   </select>
+
+  <select id="selectByOrderNo" resultMap="BaseResultMap" parameterType="long">
+    SELECT
+    <include refid="Base_Column_List"/>
+    FROM mmall_order_item
+    WHERE
+   order_no = #{orderNo}
+  </select>
+
+
   
   <insert id="orderItemBatch">
      insert into mmall_order_item (id, user_id, order_no,
