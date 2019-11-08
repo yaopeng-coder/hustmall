@@ -89,7 +89,7 @@ public class OrderServiceImpl implements IOrderService {
      * @param path
      * @return
      */
-    public ServerResponse<Map> pay(Integer userId,Long orderNo,String path) {
+    public ServerResponse pay(Integer userId,Long orderNo,String path) {
 
         Order order = orderMapper.selectByUserIdOrderNo(userId, orderNo);
         if (order == null) {
