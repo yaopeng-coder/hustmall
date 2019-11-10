@@ -5,12 +5,18 @@ import cn.hust.hustmall.common.ResponseCode;
 import cn.hust.hustmall.common.ServerResponse;
 import cn.hust.hustmall.pojo.User;
 import cn.hust.hustmall.service.IUserService;
+import cn.hust.hustmall.util.CookieUtil;
+import cn.hust.hustmall.util.JsonUtil;
+import cn.hust.hustmall.util.RedisPoolUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 /**
@@ -33,26 +39,39 @@ public class UserController {
          * @param session
          * @return
          */
-        @RequestMapping(value = "/login.do",method = RequestMethod.POST)
+        @RequestMapping(value = "/login.do")
         @ResponseBody
-        public ServerResponse<User> login(String username, String password, HttpSession session){
+        public ServerResponse<User> login(String username, String password, HttpSession session,
+                                           HttpServletResponse httpServletResponse){
 
             ServerResponse<User> response = iUserService.login(username, password);
             if(response.isSuccess()){
-                session.setAttribute(Const.CURRENT_USER,response.getData());
+
+          //      session.setAttribute(Const.CURRENT_USER,response.getData());
+
+                //写进cookie
+                CookieUtil.writeLoginToken(httpServletResponse,session.getId());
+                //用户信息保存到redis
+                RedisPoolUtil.setEx(session.getId(), JsonUtil.obj2String(response.getData()),Const.RedisCacheExtime.REDIS_SESSION_EXTIME);
             }
             return  response;
         }
 
         /**
          * 用户登出
-         * @param session
+         * @param
          * @return
          */
-        @RequestMapping(value = "/logout.do",method = RequestMethod.POST)
+        @RequestMapping(value = "/logout.do")
         @ResponseBody
-        public ServerResponse<String> logout(HttpSession session){
-            session.removeAttribute(Const.CURRENT_USER);
+        public ServerResponse<String> logout(HttpServletRequest httpServletRequest,HttpServletResponse httpServletResponse){
+           // session.removeAttribute(Const.CURRENT_USER);
+
+            //删除cookie
+            CookieUtil.delLoginCookie(httpServletRequest,httpServletResponse);
+            //删除redis中的数据
+            String token = CookieUtil.readLoginCookie(httpServletRequest);
+            RedisPoolUtil.del(token);
             return ServerResponse.createBySuccessMessage("退出成功");
         }
 
@@ -191,18 +210,25 @@ public class UserController {
          *在修改信息时，先调用这个接口，判断用户是否登录，未登录强制登陆，能得到个人信息界面，才方便修改信息
          * @return
          */
-        @RequestMapping(value = "/get_information.do",method = RequestMethod.POST)
+        @RequestMapping(value = "/get_information.do")
         @ResponseBody
-        public ServerResponse<User> getInformation( HttpSession session ){
+        public ServerResponse<User> getInformation( HttpServletRequest request ){
 
             //1.判断当前用户是否登陆
-            User currentUser = (User)session.getAttribute(Const.CURRENT_USER);
-            if(currentUser == null){
+       //     User currentUser = (User)session.getAttribute(Const.CURRENT_USER);
+            String token = CookieUtil.readLoginCookie(request);
+            if(StringUtils.isBlank(token)){
+                return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),"未登录，需要强制登陆status= 10");
+            }
+            String userJsonString = RedisPoolUtil.get(token);
+            User user = JsonUtil.string2Object(userJsonString, User.class);
+
+            if(user == null){
                 return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),"未登录，需要强制登陆status= 10");
             }
             //2.登陆则传回用户信息
 
-            return iUserService.getInfomation(currentUser.getId());
+            return iUserService.getInfomation(user.getId());
         }
 
 

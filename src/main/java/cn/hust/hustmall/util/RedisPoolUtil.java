@@ -10,7 +10,7 @@ import redis.clients.jedis.Jedis;
  * @create: 2019-11-10 10:29
  **/
 @Slf4j
-public class JedisPoolUtil {
+public class RedisPoolUtil {
 
 
     /**
@@ -34,7 +34,7 @@ public class JedisPoolUtil {
         return result;
     }
 
-    public static String setex(String key, String value,Integer seconds){
+    public static String setEx(String key, String value, Integer seconds){
         Jedis jedis = null;
         String result = null;
 
@@ -42,7 +42,7 @@ public class JedisPoolUtil {
             jedis = RedisPool.getResource();
             result = jedis.setex(key,seconds,value);
         } catch (Exception e) {
-            log.error("setex,jedis:{} ,result:{},error",jedis,result,e);
+            log.error("setEx,jedis:{} ,result:{},error",jedis,result,e);
             RedisPool.returnBrokenResource(jedis);
         }
         RedisPool.returnResource(jedis);

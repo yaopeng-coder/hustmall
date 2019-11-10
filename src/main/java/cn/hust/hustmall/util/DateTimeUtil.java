@@ -14,7 +14,7 @@ import java.util.Date;
  **/
 public class DateTimeUtil {
 
-    private static final String STANDARD_FORMAT  = "yyyy-MM-dd HH:mm:ss";
+    public static final String STANDARD_FORMAT  = "yyyy-MM-dd HH:mm:ss";
 
 
     /**
