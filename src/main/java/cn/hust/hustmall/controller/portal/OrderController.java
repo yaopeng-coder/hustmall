@@ -1,15 +1,20 @@
 package cn.hust.hustmall.controller.portal;
 
 import cn.hust.hustmall.common.Const;
+import cn.hust.hustmall.common.ResponseCode;
 import cn.hust.hustmall.common.ServerResponse;
 import cn.hust.hustmall.pojo.User;
 import cn.hust.hustmall.service.IOrderService;
+import cn.hust.hustmall.util.CookieUtil;
+import cn.hust.hustmall.util.JsonUtil;
+import cn.hust.hustmall.util.RedisPoolUtil;
 import cn.hust.hustmall.vo.OrderProductVO;
 import com.alipay.api.AlipayApiException;
 import com.alipay.api.internal.util.AlipaySignature;
 import com.alipay.demo.trade.config.Configs;
 import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -45,8 +50,13 @@ public class OrderController {
      */
     @RequestMapping("/pay.do")
     public ServerResponse<Map> pay(HttpSession session, Long orderNo, HttpServletRequest request) {
-        User user = (User) session.getAttribute(Const.CURRENT_USER);
-        if (user == null) {
+        String token = CookieUtil.readLoginCookie(request);
+        if(StringUtils.isBlank(token)){
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),"未登录，需要强制登陆status= 10");
+        }
+        String userJsonString = RedisPoolUtil.get(token);
+        User user = JsonUtil.string2Object(userJsonString, User.class);
+         if (user == null) {
             return ServerResponse.createByErrorMessage("用户未登录");
         }
 
@@ -114,98 +124,135 @@ public class OrderController {
      * 查询订单状态，便于前端在用户支付完成后根据后端传回来的true进行跳转页面
      *
      * @param orderNo
-     * @param session
+     * @param
      * @return
      */
     @RequestMapping("/query_order_pay_status.do")
-    public ServerResponse<Boolean> queryOrderPayStatus(Long orderNo, HttpSession session) {
+    public ServerResponse<Boolean> queryOrderPayStatus(Long orderNo, HttpServletRequest request) {
         //1.判断当前用户是否已登录
-        User currentUser = (User) session.getAttribute(Const.CURRENT_USER);
-        if (currentUser == null) {
+      //  User currentUser = (User) session.getAttribute(Const.CURRENT_USER);
+        String token = CookieUtil.readLoginCookie(request);
+        if(StringUtils.isBlank(token)){
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),"未登录，需要强制登陆status= 10");
+        }
+        String userJsonString = RedisPoolUtil.get(token);
+        User user = JsonUtil.string2Object(userJsonString, User.class);
+        if (user == null) {
             return ServerResponse.createByErrorMessage("用户未登录");
         }
 
-        return orderService.queryOrderPayStatus(orderNo, currentUser.getId());
+        return orderService.queryOrderPayStatus(orderNo, user.getId());
 
     }
 
     /**
      * 创建订单
-     * @param session
+     * @param
      * @param shippingId
      * @return
      */
     @RequestMapping("/create.do")
-   public ServerResponse createOrder(HttpSession session, Integer shippingId){
+   public ServerResponse createOrder(HttpServletRequest request, Integer shippingId){
        //1.判断当前用户是否已登录
-       User currentUser = (User) session.getAttribute(Const.CURRENT_USER);
-       if (currentUser == null) {
+    //   User currentUser = (User) session.getAttribute(Const.CURRENT_USER);
+        String token = CookieUtil.readLoginCookie(request);
+        if(StringUtils.isBlank(token)){
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),"未登录，需要强制登陆status= 10");
+        }
+        String userJsonString = RedisPoolUtil.get(token);
+        User user = JsonUtil.string2Object(userJsonString, User.class);
+
+       if (user == null) {
            return ServerResponse.createByErrorMessage("用户未登录");
        }
 
-        return orderService.createOrder(currentUser.getId(),shippingId);
+        return orderService.createOrder(user.getId(),shippingId);
    }
 
     /**
      * 取消订单
-     * @param session
+     * @param
      * @param orderNo
      * @return
      */
     @RequestMapping("/cancel.do")
-    public ServerResponse cancelOrder(HttpSession session, Long orderNo){
+    public ServerResponse cancelOrder(HttpServletRequest request, Long orderNo){
         //1.判断当前用户是否已登录
-        User currentUser = (User) session.getAttribute(Const.CURRENT_USER);
-        if (currentUser == null) {
+      //  User currentUser = (User) session.getAttribute(Const.CURRENT_USER);
+        String token = CookieUtil.readLoginCookie(request);
+        if(StringUtils.isBlank(token)){
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),"未登录，需要强制登陆status= 10");
+        }
+        String userJsonString = RedisPoolUtil.get(token);
+        User user = JsonUtil.string2Object(userJsonString, User.class);
+        if (user == null) {
             return ServerResponse.createByErrorMessage("用户未登录");
         }
 
-        return orderService.cancel(currentUser.getId(),orderNo);
+        return orderService.cancel(user.getId(),orderNo);
     }
 
     /**
      * 得到购物车已经勾选的产品信息，提交订单时使用
-     * @param session
+     * @param
      * @return
      */
     @RequestMapping("/get_order_cart_product.do")
-    public ServerResponse<OrderProductVO> getOrderCartProduct(HttpSession session){
+    public ServerResponse<OrderProductVO> getOrderCartProduct(HttpServletRequest request){
         //1.判断当前用户是否已登录
-        User currentUser = (User) session.getAttribute(Const.CURRENT_USER);
-        if (currentUser == null) {
+      //  User currentUser = (User) session.getAttribute(Const.CURRENT_USER);
+        String token = CookieUtil.readLoginCookie(request);
+        if(StringUtils.isBlank(token)){
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),"未登录，需要强制登陆status= 10");
+        }
+        String userJsonString = RedisPoolUtil.get(token);
+        User user = JsonUtil.string2Object(userJsonString, User.class);
+        if (user == null) {
             return ServerResponse.createByErrorMessage("用户未登录");
         }
 
-        return orderService.getOrderCartProduct(currentUser.getId());
+        return orderService.getOrderCartProduct(user.getId());
     }
 
     /**
      * 查看订单详情
-     * @param session
+     * @param
      * @param orderNo
      * @return
      */
     @RequestMapping("/detail.do")
-    public ServerResponse detail(HttpSession session, Long orderNo){
+    public ServerResponse detail(HttpServletRequest request, Long orderNo){
         //1.判断当前用户是否已登录
-        User currentUser = (User) session.getAttribute(Const.CURRENT_USER);
-        if (currentUser == null) {
+      //  User currentUser = (User) session.getAttribute(Const.CURRENT_USER);
+        String token = CookieUtil.readLoginCookie(request);
+        if(StringUtils.isBlank(token)){
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),"未登录，需要强制登陆status= 10");
+        }
+        String userJsonString = RedisPoolUtil.get(token);
+        User user = JsonUtil.string2Object(userJsonString, User.class);
+        if (user == null) {
             return ServerResponse.createByErrorMessage("用户未登录");
         }
 
-        return orderService.detail(currentUser.getId(),orderNo);
+        return orderService.detail(user.getId(),orderNo);
     }
 
     @RequestMapping("/list.do")
-    public ServerResponse list(HttpSession session, @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,
+    public ServerResponse list(HttpServletRequest request, @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,
                                @RequestParam(value = "pageSize", defaultValue = "10")  Integer pageSize){
         //1.判断当前用户是否已登录
-        User currentUser = (User) session.getAttribute(Const.CURRENT_USER);
-        if (currentUser == null) {
+      //  User currentUser = (User) session.getAttribute(Const.CURRENT_USER);
+        String token = CookieUtil.readLoginCookie(request);
+        if(StringUtils.isBlank(token)){
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),"未登录，需要强制登陆status= 10");
+        }
+        String userJsonString = RedisPoolUtil.get(token);
+        User user = JsonUtil.string2Object(userJsonString, User.class);
+        if (user == null) {
             return ServerResponse.createByErrorMessage("用户未登录");
         }
 
-        return orderService.getOrderList(currentUser.getId(),pageNum,pageSize);
+        return orderService.getOrderList(user.getId(),pageNum,pageSize);
     }
 
 

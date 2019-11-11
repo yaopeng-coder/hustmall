@@ -15,6 +15,8 @@ public class Const {
     public  static final String USERNAME = "username";
     public  static final String EMAIL = "email";
 
+    public  static String TOKEN_PREFIX = "token_";
+
     public  static final Set<String> PRICE_ASC_DESC = Sets.newHashSet("price_desc","price_asc");
 
     public interface RedisCacheExtime{

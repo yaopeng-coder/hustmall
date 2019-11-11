@@ -1,14 +1,20 @@
 package cn.hust.hustmall.controller.portal;
 
 import cn.hust.hustmall.common.Const;
+import cn.hust.hustmall.common.ResponseCode;
 import cn.hust.hustmall.common.ServerResponse;
 import cn.hust.hustmall.pojo.User;
 import cn.hust.hustmall.service.ICartService;
+import cn.hust.hustmall.util.CookieUtil;
+import cn.hust.hustmall.util.JsonUtil;
+import cn.hust.hustmall.util.RedisPoolUtil;
 import cn.hust.hustmall.vo.CartVO;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 /**
@@ -26,14 +32,19 @@ public class CartController {
 
     /**
      * 购物车添加商品
-     * @param session
+     * @param
      * @param productId
      * @param count
      * @return
      */
     @RequestMapping("/add.do")
-    public ServerResponse<CartVO> addCart(HttpSession session , Integer productId, Integer count){
-            User user = (User)session.getAttribute(Const.CURRENT_USER);
+    public ServerResponse<CartVO> addCart(HttpServletRequest request, Integer productId, Integer count){
+        String token = CookieUtil.readLoginCookie(request);
+        if(StringUtils.isBlank(token)){
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),"未登录，需要强制登陆status= 10");
+        }
+        String userJsonString = RedisPoolUtil.get(token);
+        User user = JsonUtil.string2Object(userJsonString, User.class);
             if(user == null){
                 return ServerResponse.createBySuccess();
             }
@@ -44,14 +55,20 @@ public class CartController {
 
     /**
      * 更新购物车某个产品的数量
-     * @param session
+     * @param
      * @param productId
      * @param count
      * @return
      */
     @RequestMapping("/update.do")
-    public ServerResponse<CartVO> updateCart(HttpSession session, Integer productId, Integer count){
-        User user = (User)session.getAttribute(Const.CURRENT_USER);
+    public ServerResponse<CartVO> updateCart(HttpServletRequest request, Integer productId, Integer count){
+      //  User user = (User)session.getAttribute(Const.CURRENT_USER);
+        String token = CookieUtil.readLoginCookie(request);
+        if(StringUtils.isBlank(token)){
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),"未登录，需要强制登陆status= 10");
+        }
+        String userJsonString = RedisPoolUtil.get(token);
+        User user = JsonUtil.string2Object(userJsonString, User.class);
         if(user == null){
             return ServerResponse.createBySuccess();
         }
@@ -62,13 +79,19 @@ public class CartController {
 
     /**
      * 删除购物车某个产品
-     * @param session
+     * @param
      * @param productIds
      * @return
      */
     @RequestMapping("/delete_product.do")
-    public ServerResponse<CartVO> deleteProduct(HttpSession session, String productIds){
-        User user = (User)session.getAttribute(Const.CURRENT_USER);
+    public ServerResponse<CartVO> deleteProduct(HttpServletRequest request, String productIds){
+       // User user = (User)session.getAttribute(Const.CURRENT_USER);
+        String token = CookieUtil.readLoginCookie(request);
+        if(StringUtils.isBlank(token)){
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),"未登录，需要强制登陆status= 10");
+        }
+        String userJsonString = RedisPoolUtil.get(token);
+        User user = JsonUtil.string2Object(userJsonString, User.class);
         if(user == null){
             return ServerResponse.createBySuccess();
         }
@@ -79,12 +102,18 @@ public class CartController {
 
     /**
      * 购物车列表
-     * @param session
+     * @param
      * @return
      */
     @RequestMapping("/list.do")
-    public ServerResponse<CartVO> list(HttpSession session){
-        User user = (User)session.getAttribute(Const.CURRENT_USER);
+    public ServerResponse<CartVO> list(HttpServletRequest request){
+       // User user = (User)session.getAttribute(Const.CURRENT_USER);
+        String token = CookieUtil.readLoginCookie(request);
+        if(StringUtils.isBlank(token)){
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),"未登录，需要强制登陆status= 10");
+        }
+        String userJsonString = RedisPoolUtil.get(token);
+        User user = JsonUtil.string2Object(userJsonString, User.class);
         if(user == null){
             return ServerResponse.createBySuccess();
         }
@@ -93,12 +122,18 @@ public class CartController {
 
     /**
      * 购物车全选
-     * @param session
+     * @param
      * @return
      */
     @RequestMapping("/select_all.do")
-    public ServerResponse<CartVO> selectAll(HttpSession session){
-        User user = (User)session.getAttribute(Const.CURRENT_USER);
+    public ServerResponse<CartVO> selectAll(HttpServletRequest request){
+      //  User user = (User)session.getAttribute(Const.CURRENT_USER);
+        String token = CookieUtil.readLoginCookie(request);
+        if(StringUtils.isBlank(token)){
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),"未登录，需要强制登陆status= 10");
+        }
+        String userJsonString = RedisPoolUtil.get(token);
+        User user = JsonUtil.string2Object(userJsonString, User.class);
         if(user == null){
             return ServerResponse.createBySuccess();
         }
@@ -108,12 +143,18 @@ public class CartController {
 
     /**
      * 购物车全反选
-     * @param session
+     * @param
      * @return
      */
     @RequestMapping("/un_select_all.do")
-    public ServerResponse<CartVO> unSelectAll(HttpSession session){
-        User user = (User)session.getAttribute(Const.CURRENT_USER);
+    public ServerResponse<CartVO> unSelectAll(HttpServletRequest request){
+      //  User user = (User)session.getAttribute(Const.CURRENT_USER);
+        String token = CookieUtil.readLoginCookie(request);
+        if(StringUtils.isBlank(token)){
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),"未登录，需要强制登陆status= 10");
+        }
+        String userJsonString = RedisPoolUtil.get(token);
+        User user = JsonUtil.string2Object(userJsonString, User.class);
         if(user == null){
             return ServerResponse.createBySuccess();
         }
@@ -122,13 +163,19 @@ public class CartController {
 
     /**
      * 购物车单选
-     * @param session
+     * @param
      * @param productId
      * @return
      */
     @RequestMapping("/select.do")
-    public ServerResponse<CartVO> select(HttpSession session,Integer productId){
-        User user = (User)session.getAttribute(Const.CURRENT_USER);
+    public ServerResponse<CartVO> select(HttpServletRequest request,Integer productId){
+     //   User user = (User)session.getAttribute(Const.CURRENT_USER);
+        String token = CookieUtil.readLoginCookie(request);
+        if(StringUtils.isBlank(token)){
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),"未登录，需要强制登陆status= 10");
+        }
+        String userJsonString = RedisPoolUtil.get(token);
+        User user = JsonUtil.string2Object(userJsonString, User.class);
         if(user == null){
             return ServerResponse.createBySuccess();
         }
@@ -137,13 +184,19 @@ public class CartController {
 
     /**
      * 购物车单不选
-     * @param session
+     * @param
      * @param productId
      * @return
      */
     @RequestMapping("/un_select.do")
-    public ServerResponse<CartVO> unSelect(HttpSession session,Integer productId){
-        User user = (User)session.getAttribute(Const.CURRENT_USER);
+    public ServerResponse<CartVO> unSelect(HttpServletRequest request,Integer productId){
+       // User user = (User)session.getAttribute(Const.CURRENT_USER);
+        String token = CookieUtil.readLoginCookie(request);
+        if(StringUtils.isBlank(token)){
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),"未登录，需要强制登陆status= 10");
+        }
+        String userJsonString = RedisPoolUtil.get(token);
+        User user = JsonUtil.string2Object(userJsonString, User.class);
         if(user == null){
             return ServerResponse.createBySuccess();
         }
@@ -152,12 +205,18 @@ public class CartController {
 
     /**
      * 购物车产品总数量
-     * @param session
+     * @param
      * @return
      */
     @RequestMapping("/get_cart_product_count.do")
-    public ServerResponse<Integer> getCartProductCount(HttpSession session){
-        User user = (User)session.getAttribute(Const.CURRENT_USER);
+    public ServerResponse<Integer> getCartProductCount(HttpServletRequest request){
+     //   User user = (User)session.getAttribute(Const.CURRENT_USER);
+        String token = CookieUtil.readLoginCookie(request);
+        if(StringUtils.isBlank(token)){
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),"未登录，需要强制登陆status= 10");
+        }
+        String userJsonString = RedisPoolUtil.get(token);
+        User user = JsonUtil.string2Object(userJsonString, User.class);
         if(user == null){
             return ServerResponse.createBySuccess(0);
         }

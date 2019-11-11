@@ -28,7 +28,7 @@ public class CookieUtil {
         Cookie cookie = new Cookie(COOKIE_NAME,token);
         cookie.setDomain(COOKIE_DOMAIN);
         cookie.setPath("/"); //代表设置在根目录
-        cookie.setHttpOnly(true);
+        cookie.setHttpOnly(true); //防止一些脚本攻击
 
         //不设置setMaxAge,那么cookie不会被写到硬盘里，只会存在于内存里，只在当前页面有效，单位是秒,-1代表永久
         cookie.setMaxAge(-1);
@@ -45,11 +45,13 @@ public class CookieUtil {
      */
     public static String readLoginCookie(HttpServletRequest request){
         Cookie[] cookies = request.getCookies();
-        for(Cookie cookie : cookies){
-            if(StringUtils.equals(cookie.getName(),COOKIE_NAME)){
-                log.info("返回cookie的名字：{}，返回cookie的值{}",cookie.getName(),cookie.getValue());
-                return cookie.getValue();
+        if(cookies != null){
+            for(Cookie cookie : cookies){
+                if(StringUtils.equals(cookie.getName(),COOKIE_NAME)){
+                    log.info("返回cookie的名字：{}，返回cookie的值{}",cookie.getName(),cookie.getValue());
+                    return cookie.getValue();
 
+                }
             }
         }
         return null;

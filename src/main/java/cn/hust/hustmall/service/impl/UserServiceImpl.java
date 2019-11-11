@@ -2,11 +2,11 @@ package cn.hust.hustmall.service.impl;
 
 import cn.hust.hustmall.common.Const;
 import cn.hust.hustmall.common.ServerResponse;
-import cn.hust.hustmall.common.TokenCache;
 import cn.hust.hustmall.dao.UserMapper;
 import cn.hust.hustmall.pojo.User;
 import cn.hust.hustmall.service.IUserService;
 import cn.hust.hustmall.util.MD5Util;
+import cn.hust.hustmall.util.RedisPoolUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -150,7 +150,8 @@ public class UserServiceImpl implements IUserService {
             //用guava本地缓存可以很轻便很容易的改变数据存储时间~这就比较符合忘记密码的场景了，
             // 可以根据不同的业务来设置不同的缓存策略，包括弱引用，软引用，过期时间，最大项数
             //session主要是跟踪用户状态~而且是存储在服务器端~需要手动删除已存储的数据，而且尽量小
-            TokenCache.setKey(TokenCache.TOKEN_PREFIX + username,forgetToken);
+            //TokenCache.setKey(TokenCache.TOKEN_PREFIX + username,forgetToken);
+            RedisPoolUtil.setEx(Const.TOKEN_PREFIX+username,forgetToken,60*60*12);//12小时
             return ServerResponse.createBySuccess(forgetToken);
         }
         return ServerResponse.createByErrorMessage("问题的答案错误");
@@ -171,12 +172,15 @@ public class UserServiceImpl implements IUserService {
         }
 
         //2.检查forgetToken
+        //必須用token的原因1防止橫向越權，防止用戶去修改別人的密碼，
+        // 另外一個是從驗證完答案到修改有時間，防止別人在你沒來得及修改密碼進入修改你的密碼
         if (StringUtils.isBlank(forgetToken)) {
             return ServerResponse.createByErrorMessage("token不能为空");
         }
 
         //3.查看缓存token是否已经失效
-        String token = TokenCache.getKey(TokenCache.TOKEN_PREFIX + username);
+       // String token = TokenCache.getKey(TokenCache.TOKEN_PREFIX + username);
+        String token = RedisPoolUtil.get(Const.TOKEN_PREFIX+username);
         if (StringUtils.isBlank(token)) {
             return ServerResponse.createByErrorMessage("token无效或者过期");
         }

@@ -17,7 +17,7 @@ import java.io.Serializable;
 //保证序列化Json时，如果是Null对象，key也会消失
 //实现序列化接口在将数据存入redis,rpc通信时用到，转化Json是通过@responseBody注解实现的，这里可以不实现序列化
 @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
-public class ServerResponse<T> implements Serializable {
+public class  ServerResponse<T> implements Serializable {
 
     private int status;
     private String msg;
