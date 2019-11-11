@@ -7,7 +7,7 @@ import cn.hust.hustmall.pojo.User;
 import cn.hust.hustmall.service.IUserService;
 import cn.hust.hustmall.util.CookieUtil;
 import cn.hust.hustmall.util.JsonUtil;
-import cn.hust.hustmall.util.RedisPoolUtil;
+import cn.hust.hustmall.util.RedisShardedPoolUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -52,7 +52,7 @@ public class UserController {
                 //写进cookie
                 CookieUtil.writeLoginToken(httpServletResponse,session.getId());
                 //用户信息保存到redis
-                RedisPoolUtil.setEx(session.getId(), JsonUtil.obj2String(response.getData()),Const.RedisCacheExtime.REDIS_SESSION_EXTIME);
+                RedisShardedPoolUtil.setEx(session.getId(), JsonUtil.obj2String(response.getData()),Const.RedisCacheExtime.REDIS_SESSION_EXTIME);
             }
             return  response;
         }
@@ -71,7 +71,7 @@ public class UserController {
             CookieUtil.delLoginCookie(httpServletRequest,httpServletResponse);
             //删除redis中的数据
             String token = CookieUtil.readLoginCookie(httpServletRequest);
-            RedisPoolUtil.del(token);
+            RedisShardedPoolUtil.del(token);
             return ServerResponse.createBySuccessMessage("退出成功");
         }
 
@@ -113,7 +113,7 @@ public class UserController {
             if(StringUtils.isBlank(token)){
                 return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),"未登录，需要强制登陆status= 10");
             }
-            String userJsonString = RedisPoolUtil.get(token);
+            String userJsonString = RedisShardedPoolUtil.get(token);
             User user = JsonUtil.string2Object(userJsonString, User.class);
             if(user != null){
                 return ServerResponse.createBySuccess(user);
@@ -175,7 +175,7 @@ public class UserController {
             if(StringUtils.isBlank(token)){
                 return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),"未登录，需要强制登陆status= 10");
             }
-            String userJsonString = RedisPoolUtil.get(token);
+            String userJsonString = RedisShardedPoolUtil.get(token);
             User user = JsonUtil.string2Object(userJsonString, User.class);
             if(user == null){
                 return ServerResponse.createByErrorMessage("用户未登录");
@@ -201,7 +201,7 @@ public class UserController {
             if(StringUtils.isBlank(token)){
                 return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),"未登录，需要强制登陆status= 10");
             }
-            String userJsonString = RedisPoolUtil.get(token);
+            String userJsonString = RedisShardedPoolUtil.get(token);
             User currentUser = JsonUtil.string2Object(userJsonString, User.class);
 
              if(currentUser == null){
@@ -217,7 +217,7 @@ public class UserController {
                 //3.更新信息，若成功则更新session里的user
                 response.getData().setUsername(user.getUsername());
               //  session.setAttribute(Const.CURRENT_USER,response.getData());
-                RedisPoolUtil.setEx(session.getId(), JsonUtil.obj2String(response.getData()),Const.RedisCacheExtime.REDIS_SESSION_EXTIME);
+                RedisShardedPoolUtil.setEx(session.getId(), JsonUtil.obj2String(response.getData()),Const.RedisCacheExtime.REDIS_SESSION_EXTIME);
 
             }
 
@@ -240,7 +240,7 @@ public class UserController {
             if(StringUtils.isBlank(token)){
                 return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),"未登录，需要强制登陆status= 10");
             }
-            String userJsonString = RedisPoolUtil.get(token);
+            String userJsonString = RedisShardedPoolUtil.get(token);
             User user = JsonUtil.string2Object(userJsonString, User.class);
 
             if(user == null){

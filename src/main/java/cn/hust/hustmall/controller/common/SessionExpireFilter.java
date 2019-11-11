@@ -4,7 +4,7 @@ import cn.hust.hustmall.common.Const;
 import cn.hust.hustmall.pojo.User;
 import cn.hust.hustmall.util.CookieUtil;
 import cn.hust.hustmall.util.JsonUtil;
-import cn.hust.hustmall.util.RedisPoolUtil;
+import cn.hust.hustmall.util.RedisShardedPoolUtil;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.servlet.*;
@@ -31,10 +31,10 @@ public class SessionExpireFilter implements Filter{
         String loginToken = CookieUtil.readLoginCookie(httpServletRequest);
         if(StringUtils.isNotBlank(loginToken)){
             //2.根据token去redis中取值，若返回的userJson反序列化后不为空，则更新session时间
-            String userJson = RedisPoolUtil.get(loginToken);
+            String userJson = RedisShardedPoolUtil.get(loginToken);
             User user = JsonUtil.string2Object(userJson, User.class);
             if(user != null){
-                RedisPoolUtil.expire(loginToken, Const.RedisCacheExtime.REDIS_SESSION_EXTIME);
+                RedisShardedPoolUtil.expire(loginToken, Const.RedisCacheExtime.REDIS_SESSION_EXTIME);
             }
 
         }

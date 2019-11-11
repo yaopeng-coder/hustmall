@@ -6,7 +6,7 @@ import cn.hust.hustmall.dao.UserMapper;
 import cn.hust.hustmall.pojo.User;
 import cn.hust.hustmall.service.IUserService;
 import cn.hust.hustmall.util.MD5Util;
-import cn.hust.hustmall.util.RedisPoolUtil;
+import cn.hust.hustmall.util.RedisShardedPoolUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -151,7 +151,7 @@ public class UserServiceImpl implements IUserService {
             // 可以根据不同的业务来设置不同的缓存策略，包括弱引用，软引用，过期时间，最大项数
             //session主要是跟踪用户状态~而且是存储在服务器端~需要手动删除已存储的数据，而且尽量小
             //TokenCache.setKey(TokenCache.TOKEN_PREFIX + username,forgetToken);
-            RedisPoolUtil.setEx(Const.TOKEN_PREFIX+username,forgetToken,60*60*12);//12小时
+            RedisShardedPoolUtil.setEx(Const.TOKEN_PREFIX+username,forgetToken,60*60*12);//12小时
             return ServerResponse.createBySuccess(forgetToken);
         }
         return ServerResponse.createByErrorMessage("问题的答案错误");
@@ -180,7 +180,7 @@ public class UserServiceImpl implements IUserService {
 
         //3.查看缓存token是否已经失效
        // String token = TokenCache.getKey(TokenCache.TOKEN_PREFIX + username);
-        String token = RedisPoolUtil.get(Const.TOKEN_PREFIX+username);
+        String token = RedisShardedPoolUtil.get(Const.TOKEN_PREFIX+username);
         if (StringUtils.isBlank(token)) {
             return ServerResponse.createByErrorMessage("token无效或者过期");
         }

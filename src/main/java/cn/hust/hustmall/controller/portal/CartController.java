@@ -7,7 +7,7 @@ import cn.hust.hustmall.pojo.User;
 import cn.hust.hustmall.service.ICartService;
 import cn.hust.hustmall.util.CookieUtil;
 import cn.hust.hustmall.util.JsonUtil;
-import cn.hust.hustmall.util.RedisPoolUtil;
+import cn.hust.hustmall.util.RedisShardedPoolUtil;
 import cn.hust.hustmall.vo.CartVO;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 
 /**
  * 购物车
@@ -43,7 +42,7 @@ public class CartController {
         if(StringUtils.isBlank(token)){
             return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),"未登录，需要强制登陆status= 10");
         }
-        String userJsonString = RedisPoolUtil.get(token);
+        String userJsonString = RedisShardedPoolUtil.get(token);
         User user = JsonUtil.string2Object(userJsonString, User.class);
             if(user == null){
                 return ServerResponse.createBySuccess();
@@ -67,7 +66,7 @@ public class CartController {
         if(StringUtils.isBlank(token)){
             return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),"未登录，需要强制登陆status= 10");
         }
-        String userJsonString = RedisPoolUtil.get(token);
+        String userJsonString = RedisShardedPoolUtil.get(token);
         User user = JsonUtil.string2Object(userJsonString, User.class);
         if(user == null){
             return ServerResponse.createBySuccess();
@@ -90,7 +89,7 @@ public class CartController {
         if(StringUtils.isBlank(token)){
             return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),"未登录，需要强制登陆status= 10");
         }
-        String userJsonString = RedisPoolUtil.get(token);
+        String userJsonString = RedisShardedPoolUtil.get(token);
         User user = JsonUtil.string2Object(userJsonString, User.class);
         if(user == null){
             return ServerResponse.createBySuccess();
@@ -112,7 +111,7 @@ public class CartController {
         if(StringUtils.isBlank(token)){
             return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),"未登录，需要强制登陆status= 10");
         }
-        String userJsonString = RedisPoolUtil.get(token);
+        String userJsonString = RedisShardedPoolUtil.get(token);
         User user = JsonUtil.string2Object(userJsonString, User.class);
         if(user == null){
             return ServerResponse.createBySuccess();
@@ -132,7 +131,7 @@ public class CartController {
         if(StringUtils.isBlank(token)){
             return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),"未登录，需要强制登陆status= 10");
         }
-        String userJsonString = RedisPoolUtil.get(token);
+        String userJsonString = RedisShardedPoolUtil.get(token);
         User user = JsonUtil.string2Object(userJsonString, User.class);
         if(user == null){
             return ServerResponse.createBySuccess();
@@ -153,7 +152,7 @@ public class CartController {
         if(StringUtils.isBlank(token)){
             return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),"未登录，需要强制登陆status= 10");
         }
-        String userJsonString = RedisPoolUtil.get(token);
+        String userJsonString = RedisShardedPoolUtil.get(token);
         User user = JsonUtil.string2Object(userJsonString, User.class);
         if(user == null){
             return ServerResponse.createBySuccess();
@@ -174,7 +173,7 @@ public class CartController {
         if(StringUtils.isBlank(token)){
             return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),"未登录，需要强制登陆status= 10");
         }
-        String userJsonString = RedisPoolUtil.get(token);
+        String userJsonString = RedisShardedPoolUtil.get(token);
         User user = JsonUtil.string2Object(userJsonString, User.class);
         if(user == null){
             return ServerResponse.createBySuccess();
@@ -195,7 +194,7 @@ public class CartController {
         if(StringUtils.isBlank(token)){
             return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),"未登录，需要强制登陆status= 10");
         }
-        String userJsonString = RedisPoolUtil.get(token);
+        String userJsonString = RedisShardedPoolUtil.get(token);
         User user = JsonUtil.string2Object(userJsonString, User.class);
         if(user == null){
             return ServerResponse.createBySuccess();
@@ -215,7 +214,7 @@ public class CartController {
         if(StringUtils.isBlank(token)){
             return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),"未登录，需要强制登陆status= 10");
         }
-        String userJsonString = RedisPoolUtil.get(token);
+        String userJsonString = RedisShardedPoolUtil.get(token);
         User user = JsonUtil.string2Object(userJsonString, User.class);
         if(user == null){
             return ServerResponse.createBySuccess(0);

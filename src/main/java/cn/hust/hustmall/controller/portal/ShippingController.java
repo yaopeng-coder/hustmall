@@ -7,7 +7,7 @@ import cn.hust.hustmall.pojo.User;
 import cn.hust.hustmall.service.IShippingService;
 import cn.hust.hustmall.util.CookieUtil;
 import cn.hust.hustmall.util.JsonUtil;
-import cn.hust.hustmall.util.RedisPoolUtil;
+import cn.hust.hustmall.util.RedisShardedPoolUtil;
 import com.github.pagehelper.PageInfo;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,7 +46,7 @@ public class ShippingController {
         if(StringUtils.isBlank(token)){
             return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),"未登录，需要强制登陆status= 10");
         }
-        String userJsonString = RedisPoolUtil.get(token);
+        String userJsonString = RedisShardedPoolUtil.get(token);
         User user = JsonUtil.string2Object(userJsonString, User.class);
           if(user == null){
             return ServerResponse.createByErrorMessage("用户未登录");
@@ -69,7 +69,7 @@ public class ShippingController {
         if(StringUtils.isBlank(token)){
             return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),"未登录，需要强制登陆status= 10");
         }
-        String userJsonString = RedisPoolUtil.get(token);
+        String userJsonString = RedisShardedPoolUtil.get(token);
         User user = JsonUtil.string2Object(userJsonString, User.class);
           if(user == null){
             return ServerResponse.createByErrorMessage("用户未登录");
@@ -92,7 +92,7 @@ public class ShippingController {
         if(StringUtils.isBlank(token)){
             return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),"未登录，需要强制登陆status= 10");
         }
-        String userJsonString = RedisPoolUtil.get(token);
+        String userJsonString = RedisShardedPoolUtil.get(token);
         User user = JsonUtil.string2Object(userJsonString, User.class);
         if(user == null){
                 return ServerResponse.createByErrorMessage("用户未登录");
@@ -115,7 +115,7 @@ public class ShippingController {
         if(StringUtils.isBlank(token)){
             return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),"未登录，需要强制登陆status= 10");
         }
-        String userJsonString = RedisPoolUtil.get(token);
+        String userJsonString = RedisShardedPoolUtil.get(token);
         User user = JsonUtil.string2Object(userJsonString, User.class);
 
          if(user == null){
@@ -140,7 +140,7 @@ public class ShippingController {
           String token = CookieUtil.readLoginCookie(request);
           if(StringUtils.isBlank(token)){
               return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),"未登录，需要强制登陆status= 10");            }
-              String userJsonString = RedisPoolUtil.get(token);
+              String userJsonString = RedisShardedPoolUtil.get(token);
           User user = JsonUtil.string2Object(userJsonString, User.class);
         if(user == null){
             return ServerResponse.createByErrorMessage("用户未登录");

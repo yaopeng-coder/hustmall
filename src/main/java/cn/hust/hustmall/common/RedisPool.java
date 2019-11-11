@@ -19,8 +19,8 @@ public class RedisPool {
     private static Boolean testOnBorrow = Boolean.parseBoolean(PropertiesUtil.getProperty("redis.test.borrow")); //从连接池中取出Jedis时是否需要测试
     private static Boolean testOnReturn = Boolean.parseBoolean(PropertiesUtil.getProperty("redis.test.return")); //将Jedis放回连接池是否需要测试
 
-    private static String  redisIp = PropertiesUtil.getProperty("redis.ip");     //redis服务端的ip
-    private static Integer redisPort = Integer.parseInt(PropertiesUtil.getProperty("redis.port"));   //redis服务端的端口
+    private static String  redisIp = PropertiesUtil.getProperty("redis1.ip");     //redis服务端的ip
+    private static Integer redisPort = Integer.parseInt(PropertiesUtil.getProperty("redis1.port"));   //redis服务端的端口
 
 
     private static void initPool(){
@@ -28,8 +28,13 @@ public class RedisPool {
         poolConfig.setMaxTotal(maxTotal);
         poolConfig.setMaxIdle(maxIdle);
         poolConfig.setMinIdle(minIdle);
+
         poolConfig.setTestOnBorrow(testOnBorrow);
         poolConfig.setTestOnReturn(testOnReturn);
+
+        //连接耗尽时是否阻塞，FALSE会抛出异常，true阻塞直到超时，默认为true
+        poolConfig.setBlockWhenExhausted(true);
+
         jedisPool = new JedisPool(poolConfig,redisIp,redisPort,1000*2);
     }
 
