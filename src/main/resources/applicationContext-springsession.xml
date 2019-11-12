@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx" xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="
+     http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+     http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+     http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+     http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+
+    <!--无论是cookie+redis原生实现单点登录还是springsession实现，必须保证如果是域名登陆，以后都得用域名登陆才能获取到信息，因为浏览器中的
+    是有domain的，用Localhost登陆和用hustmall.com登陆浏览器的cookie的domain是不一样的-->
+
+    <!--配置springsession的相关bean-->
+    <bean name="redisHttpSessionConfiguration" class="org.springframework.session.data.redis.config.annotation.web.http.RedisHttpSessionConfiguration">
+        <!--session有效期为30分钟-->
+        <property name="maxInactiveIntervalInSeconds" value="1800"></property>
+    </bean>
+
+    <!--配置jedis连接池配置的相关bean-->
+    <bean name="jedisPoolConfig" class="redis.clients.jedis.JedisPoolConfig">
+        <property name="maxTotal" value="20"></property>
+    </bean>
+
+    <!--配置Jedis连接池的bean-->
+    <bean name="jedisConnectionFactory" class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory">
+        <property name="poolConfig" ref="jedisPoolConfig"></property>
+        <property name="hostName" value="116.62.243.88"></property>
+        <property name="port" value="6379"></property>
+    </bean>
+
+    <!--配置cookie的相关属性，这样可以域名登陆-->
+    <!-- //注意登出时，他只是删除了redis中springsession中关于用户信息的一部分，没有删除浏览器中的cookie-->
+    <bean name="defaultCookieSerializer" class="org.springframework.session.web.http.DefaultCookieSerializer">
+        <property name="cookieName" value="SPRING_SESSION"/>
+        <property name="domainName" value=".hustmall.com"/>
+        <property name="cookiePath" value="/"/>
+        <property name="cookieMaxAge" value="18000"/>
+        <property name="useHttpOnlyCookie" value="true"/>
+    </bean>
+
+
+
+
+</beans>

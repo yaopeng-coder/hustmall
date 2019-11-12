@@ -36,12 +36,12 @@ public class UserController {
          * 实现用户登录功能
          * @param username
          * @param password
-         * @param session
+         * @param
          * @return
          */
         @RequestMapping(value = "/login.do")
         @ResponseBody
-        public ServerResponse<User> login(String username, String password, HttpSession session,
+        public ServerResponse<User> login(String username, String password,HttpSession session,
                                            HttpServletResponse httpServletResponse){
 
             ServerResponse<User> response = iUserService.login(username, password);
