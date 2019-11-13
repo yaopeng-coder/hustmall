@@ -29,6 +29,7 @@ import com.github.pagehelper.PageInfo;
 import com.google.common.collect.Lists;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.DateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -505,8 +506,19 @@ public class OrderServiceImpl implements IOrderService {
      */
     private void reduceProductStock(List<OrderItem> orderItemList){
         for(OrderItem orderItem : orderItemList){
-            Product product = productMapper.selectByPrimaryKey(orderItem.getProductId());
-            product.setStock(product.getStock() - orderItem.getQuantity());
+
+            //注意，这里面的sql语句用了select .. for update,在用主键进行查询时，会产生行锁，否则会产生表锁
+            //在dao层返回值设置为Integer类型，因为如果产品被删除等等，用Int类型接受不了Null类型的值，会报错
+            //区别与以前可以用int，因为以前查询都是select count(1),而现在是select stock
+            //一定要用主键where条件，防止锁表。同时必须是支持MySQL的InnoDB。
+            Integer stock = productMapper.selectStockByProductId(orderItem.getProductId());
+
+            if(stock == null){
+                continue;
+            }
+            Product product = new Product();
+            product.setId(orderItem.getProductId());
+            product.setStock(stock - orderItem.getQuantity());
             productMapper.updateByPrimaryKeySelective(product);
         }
     }
@@ -517,8 +529,19 @@ public class OrderServiceImpl implements IOrderService {
      */
     private void increaseProductStock(List<OrderItem> orderItemList){
         for(OrderItem orderItem : orderItemList){
-            Product product = productMapper.selectByPrimaryKey(orderItem.getProductId());
-            product.setStock(product.getStock() + orderItem.getQuantity());
+
+            //注意，这里面的sql语句用了select .. for update,在用主键进行查询时，会产生行锁，否则会产生表锁
+            //在dao层返回值设置为Integer类型，因为如果产品被删除等等，用Int类型接受不了Null类型的值，会报错
+            //区别与以前可以用int，因为以前查询都是select count(1),而现在是select stock
+            //一定要用主键where条件，防止锁表。同时必须是支持MySQL的InnoDB。
+            Integer stock = productMapper.selectStockByProductId(orderItem.getProductId());
+
+            if(stock == null){
+                continue;
+            }
+            Product product = new Product();
+            product.setId(orderItem.getProductId());
+            product.setStock(stock+orderItem.getQuantity());
             productMapper.updateByPrimaryKeySelective(product);
         }
     }
@@ -587,6 +610,11 @@ public class OrderServiceImpl implements IOrderService {
     }
 
 
+    /**
+     * 管理员查看某个订单详情
+     * @param orderNo
+     * @return
+     */
     public ServerResponse<OrderVO> manageOrderDetail(Long orderNo){
         Order order = orderMapper.selectByOrderNo(orderNo);
         if(order == null){
@@ -601,6 +629,11 @@ public class OrderServiceImpl implements IOrderService {
 
     }
 
+    /**
+     * 管理员把订单发货
+     * @param orderNo
+     * @return
+     */
     public ServerResponse<String> manageSendGoods(Long orderNo){
         Order order = orderMapper.selectByOrderNo(orderNo);
         if(order == null){
@@ -616,6 +649,34 @@ public class OrderServiceImpl implements IOrderService {
         }
 
         return ServerResponse.createByErrorMessage("发货失败");
+
+    }
+
+    /**
+     * spirng schdule 定时任务关闭订单
+     * @param hour
+     */
+
+    public void closeOrder(int hour){
+        //1.查询在规定时间以前的所有订单
+        Date date = DateUtils.addHours(new Date(),-hour);
+        List<Order> orderList = orderMapper.selectByOrderStatusCreateTime(Const.OrderStatusEnum.NOT_PAY.getCode(), DateTimeUtil.dateToStr(date));
+
+        //2.遍历某个订单，并且对订单的每个订单详情增加库存
+        for(Order order : orderList){
+            List<OrderItem> orderItemList = orderItemMapper.selectByOrderNo(order.getOrderNo());
+            if(CollectionUtils.isNotEmpty(orderItemList)){
+
+                //注意这里涉及到的锁问题
+                this.increaseProductStock(orderItemList);
+            }
+
+            //3.关闭订单，将订单状态置为取消
+            orderMapper.closeOrderById(order.getId());
+            log.info("关闭订单orderNo{}",order.getOrderNo());
+        }
+
+
 
     }
 
