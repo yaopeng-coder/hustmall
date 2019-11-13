@@ -23,6 +23,8 @@ public class SessionExpireFilter implements Filter{
 
     }
 
+
+    //过滤器和拦截器区别，前者是j2ee规范，基于函数回调实现，而后者是springmvc框架的，基于函数反射加代理实现
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
 

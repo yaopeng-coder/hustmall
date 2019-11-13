@@ -1,10 +1,7 @@
 package cn.hust.hustmall.controller.backend;
 
-import cn.hust.hustmall.common.Const;
-import cn.hust.hustmall.common.ResponseCode;
 import cn.hust.hustmall.common.ServerResponse;
 import cn.hust.hustmall.pojo.Category;
-import cn.hust.hustmall.pojo.User;
 import cn.hust.hustmall.service.ICategoryService;
 import cn.hust.hustmall.service.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,18 +38,24 @@ public class CategoryManageController {
          */
         @RequestMapping("/add_category.do")
         public ServerResponse<String> addCategory(HttpSession session,String categoryName,@RequestParam(value = "parentId",defaultValue = "0") int parentId){
-            //1.判断用户是否登陆
-            User user = (User)session.getAttribute(Const.CURRENT_USER);
-            if(user == null){
-                return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),"用户未登陆，请登录");
-            }
-            //2.校验用户身份，必须为管理员，防止横向越权，不能有session信息就不判断
-            if(iUserService.checkAdminRole(user).isSuccess()){
-                //3.添加类别
-                return iCategoryService.addCategory(parentId,categoryName);
-            }else{
-                return ServerResponse.createByErrorMessage("不是管理员,没有权限");
-            }
+//            //1.判断用户是否登陆
+//            User user = (User)session.getAttribute(Const.CURRENT_USER);
+//            if(user == null){
+//                return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),"用户未登陆，请登录");
+//            }
+//            //2.校验用户身份，必须为管理员，防止横向越权，不能有session信息就不判断
+//            if(iUserService.checkAdminRole(user).isSuccess()){
+//                //3.添加类别
+//                return iCategoryService.addCategory(parentId,categoryName);
+//            }else{
+//                return ServerResponse.createByErrorMessage("不是管理员,没有权限");
+//            }
+
+            //拦截器已经验证权限，直接进行业务处理
+
+            return iCategoryService.addCategory(parentId,categoryName);
+
+
         }
 
 
@@ -66,17 +69,21 @@ public class CategoryManageController {
         @RequestMapping("/set_category_name.do")
         public ServerResponse<String> setCategoryName(Integer categoryId, String categoryName,HttpSession session){
             //1.判断用户是否登陆
-            User user = (User)session.getAttribute(Const.CURRENT_USER);
-            if(user == null){
-                return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),"用户未登陆，请登录");
-            }
-            //2.校验用户身份，必须为管理员
-            if(iUserService.checkAdminRole(user).isSuccess()){
-                //3.修改品类名字
-                return iCategoryService.updateCategotyName(categoryId,categoryName);
-            }else{
-                return ServerResponse.createByErrorMessage("不是管理员,没有权限");
-            }
+//            User user = (User)session.getAttribute(Const.CURRENT_USER);
+//            if(user == null){
+//                return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),"用户未登陆，请登录");
+//            }
+//            //2.校验用户身份，必须为管理员
+//            if(iUserService.checkAdminRole(user).isSuccess()){
+//                //3.修改品类名字
+//                return iCategoryService.updateCategotyName(categoryId,categoryName);
+//            }else{
+//                return ServerResponse.createByErrorMessage("不是管理员,没有权限");
+//            }
+
+            //拦截器已经验证权限，直接进行验业务处理
+
+            return iCategoryService.updateCategotyName(categoryId,categoryName);
         }
 
         /**
@@ -89,17 +96,20 @@ public class CategoryManageController {
         public ServerResponse<List<Category>> getChildrenParallelCategory(@RequestParam(value = "categoryId",defaultValue = "0")
                                                                                   Integer categoryId,HttpSession session){
             //1.判断用户是否登陆
-            User user = (User)session.getAttribute(Const.CURRENT_USER);
-            if(user == null){
-                return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),"用户未登陆，请登录");
-            }
-            //2.校验用户身份，必须为管理员
-            if(iUserService.checkAdminRole(user).isSuccess()){
-                //3.获取该类别子节点的category信息，并且不递归，保持平级
-                return iCategoryService.getChildrenParallelCategory(categoryId);
-            }else{
-                return ServerResponse.createByErrorMessage("不是管理员,没有权限");
-            }
+//            User user = (User)session.getAttribute(Const.CURRENT_USER);
+//            if(user == null){
+//                return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),"用户未登陆，请登录");
+//            }
+//            //2.校验用户身份，必须为管理员
+//            if(iUserService.checkAdminRole(user).isSuccess()){
+//                //3.获取该类别子节点的category信息，并且不递归，保持平级
+//                return iCategoryService.getChildrenParallelCategory(categoryId);
+//            }else{
+//                return ServerResponse.createByErrorMessage("不是管理员,没有权限");
+//            }
+
+            //拦截器已经验证权限，直接进行业务处理
+            return iCategoryService.getChildrenParallelCategory(categoryId);
         }
 
         /**
@@ -112,16 +122,19 @@ public class CategoryManageController {
         public ServerResponse<List<Integer>> getCategoryAndDeepChildrenCategoty(@RequestParam(value = "categoryId",defaultValue = "0")
                                                                                                 Integer categoryId, HttpSession session){
             //1.判断用户是否登陆
-            User user = (User)session.getAttribute(Const.CURRENT_USER);
-            if(user == null){
-                return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),"用户未登陆，请登录");
-            }
-            //2.校验用户身份，必须为管理员
-            if(iUserService.checkAdminRole(user).isSuccess()){
-                //3.获取当前分类id和递归子节点categoryid
-                return iCategoryService.getCategoryAndDeepCategoryById(categoryId);
-            }else{
-                return ServerResponse.createByErrorMessage("不是管理员,没有权限");
-            }
+//            User user = (User)session.getAttribute(Const.CURRENT_USER);
+//            if(user == null){
+//                return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),"用户未登陆，请登录");
+//            }
+//            //2.校验用户身份，必须为管理员
+//            if(iUserService.checkAdminRole(user).isSuccess()){
+//                //3.获取当前分类id和递归子节点categoryid
+//                return iCategoryService.getCategoryAndDeepCategoryById(categoryId);
+//            }else{
+//                return ServerResponse.createByErrorMessage("不是管理员,没有权限");
+//            }
+
+            //拦截器已经验证权限，直接进行业务处理
+            return iCategoryService.getCategoryAndDeepCategoryById(categoryId);
         }
 }

@@ -1,10 +1,8 @@
 package cn.hust.hustmall.controller.backend;
 
-import cn.hust.hustmall.common.Const;
 import cn.hust.hustmall.common.ServerResponse;
 import cn.hust.hustmall.dto.ProductDetailDTO;
 import cn.hust.hustmall.pojo.Product;
-import cn.hust.hustmall.pojo.User;
 import cn.hust.hustmall.service.IFileService;
 import cn.hust.hustmall.service.IProductService;
 import cn.hust.hustmall.service.IUserService;
@@ -52,18 +50,21 @@ public class ProductManageController {
     @RequestMapping("/save.do")
     public ServerResponse<String> productSave(HttpSession session, Product product){
         //1.检查是否登陆
-         User currentUser = (User)session.getAttribute(Const.CURRENT_USER);
-         if(currentUser == null){
-                return ServerResponse.createByErrorMessage("未登录，请先登陆");
-         }
-        //2.检察是否为管理员
+//         User currentUser = (User)session.getAttribute(Const.CURRENT_USER);
+//         if(currentUser == null){
+//                return ServerResponse.createByErrorMessage("未登录，请先登陆");
+//         }
+//        //2.检察是否为管理员
+//
+//        if(iUserService.checkAdminRole(currentUser).isSuccess()){
+//            //3.进行新增或者更新产品操作
+//            return iProductService.saveOrUpdateProduct(product);
+//        }else{
+//            return ServerResponse.createByErrorMessage("不是管理员，无权限操作");
+//        }
 
-        if(iUserService.checkAdminRole(currentUser).isSuccess()){
-            //3.进行新增或者更新产品操作
-            return iProductService.saveOrUpdateProduct(product);
-        }else{
-            return ServerResponse.createByErrorMessage("不是管理员，无权限操作");
-        }
+        //拦截器已经验证权限，直接进行业务处理
+        return iProductService.saveOrUpdateProduct(product);
     }
 
     /**
@@ -76,18 +77,21 @@ public class ProductManageController {
     @RequestMapping("/set_sale_status.do")
     public ServerResponse<String> setSaleStatus(HttpSession session, Integer productId, Integer status){
         //1.检查是否登陆
-        User currentUser = (User)session.getAttribute(Const.CURRENT_USER);
-        if(currentUser == null){
-            return ServerResponse.createByErrorMessage("未登录，请先登陆");
-        }
-        //2.检察是否为管理员
+//        User currentUser = (User)session.getAttribute(Const.CURRENT_USER);
+//        if(currentUser == null){
+//            return ServerResponse.createByErrorMessage("未登录，请先登陆");
+//        }
+//        //2.检察是否为管理员
+//
+//        if(iUserService.checkAdminRole(currentUser).isSuccess()){
+//            //3.进行新增或者更新产品操作
+//            return iProductService.setSaleStatus(productId,status);
+//        }else{
+//            return ServerResponse.createByErrorMessage("不是管理员，无权限操作");
+//        }
 
-        if(iUserService.checkAdminRole(currentUser).isSuccess()){
-            //3.进行新增或者更新产品操作
-            return iProductService.setSaleStatus(productId,status);
-        }else{
-            return ServerResponse.createByErrorMessage("不是管理员，无权限操作");
-        }
+        //拦截器已经验证权限，直接进行业务处理
+        return iProductService.setSaleStatus(productId,status);
     }
 
     /**
@@ -99,19 +103,22 @@ public class ProductManageController {
     @RequestMapping("/detail.do")
     public ServerResponse<ProductDetailDTO> productDetail(HttpSession session, Integer productId){
         //1.检查是否登陆
-        User currentUser = (User)session.getAttribute(Const.CURRENT_USER);
-        if(currentUser == null){
-            return ServerResponse.createByErrorMessage("未登录，请先登陆");
-        }
-        //2.检察是否为管理员
+//        User currentUser = (User)session.getAttribute(Const.CURRENT_USER);
+//        if(currentUser == null){
+//            return ServerResponse.createByErrorMessage("未登录，请先登陆");
+//        }
+//        //2.检察是否为管理员
+//
+//        if(iUserService.checkAdminRole(currentUser).isSuccess()){
+//            //3.进行查看产品详情的操作
+//           return  iProductService.manageProductDetail(productId);
+//
+//        }else{
+//            return ServerResponse.createByErrorMessage("不是管理员，无权限操作");
+//        }
 
-        if(iUserService.checkAdminRole(currentUser).isSuccess()){
-            //3.进行查看产品详情的操作
-           return  iProductService.manageProductDetail(productId);
-
-        }else{
-            return ServerResponse.createByErrorMessage("不是管理员，无权限操作");
-        }
+        //拦截器已经验证权限，直接进行业务处理
+        return  iProductService.manageProductDetail(productId);
     }
 
     /**
@@ -125,19 +132,22 @@ public class ProductManageController {
     public ServerResponse<PageInfo> getList(HttpSession session, @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,
                                             @RequestParam(value = "pageSize" ,defaultValue = "10") Integer pageSize){
         //1.检查是否登陆
-        User currentUser = (User)session.getAttribute(Const.CURRENT_USER);
-        if(currentUser == null){
-            return ServerResponse.createByErrorMessage("未登录，请先登陆");
-        }
-        //2.检察是否为管理员
+//        User currentUser = (User)session.getAttribute(Const.CURRENT_USER);
+//        if(currentUser == null){
+//            return ServerResponse.createByErrorMessage("未登录，请先登陆");
+//        }
+//        //2.检察是否为管理员
+//
+//        if(iUserService.checkAdminRole(currentUser).isSuccess()){
+//            //3.进行查看产品详情的操作
+//        return iProductService.getProductList(pageNum,pageSize);
+//
+//        }else{
+//            return ServerResponse.createByErrorMessage("不是管理员，无权限操作");
+//        }
 
-        if(iUserService.checkAdminRole(currentUser).isSuccess()){
-            //3.进行查看产品详情的操作
+        //拦截器已经验证权限，直接进行业务处理
         return iProductService.getProductList(pageNum,pageSize);
-
-        }else{
-            return ServerResponse.createByErrorMessage("不是管理员，无权限操作");
-        }
     }
 
 
@@ -155,19 +165,22 @@ public class ProductManageController {
                                                   @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,
                                                   @RequestParam(value = "pageSize" ,defaultValue = "10") Integer pageSize){
         //1.检查是否登陆
-        User currentUser = (User)session.getAttribute(Const.CURRENT_USER);
-        if(currentUser == null){
-            return ServerResponse.createByErrorMessage("未登录，请先登陆");
-        }
-        //2.检察是否为管理员
+//        User currentUser = (User)session.getAttribute(Const.CURRENT_USER);
+//        if(currentUser == null){
+//            return ServerResponse.createByErrorMessage("未登录，请先登陆");
+//        }
+//        //2.检察是否为管理员
+//
+//        if(iUserService.checkAdminRole(currentUser).isSuccess()){
+//            //3.进行模糊查询商品的操作
+//            return iProductService.searchProduct(productName,productId,pageNum,pageSize);
+//
+//        }else{
+//            return ServerResponse.createByErrorMessage("不是管理员，无权限操作");
+//        }
 
-        if(iUserService.checkAdminRole(currentUser).isSuccess()){
-            //3.进行模糊查询商品的操作
-            return iProductService.searchProduct(productName,productId,pageNum,pageSize);
-
-        }else{
-            return ServerResponse.createByErrorMessage("不是管理员，无权限操作");
-        }
+        //拦截器已经验证权限，直接进行业务处理
+        return iProductService.searchProduct(productName,productId,pageNum,pageSize);
     }
 
     /**
@@ -180,27 +193,38 @@ public class ProductManageController {
     @RequestMapping("/upload.do")
     public ServerResponse<Map<String,String>> upload(HttpSession session, @RequestParam(value = "upload_file",required = false) MultipartFile file , HttpServletRequest request){
         //1.检查是否登陆
-        User currentUser = (User)session.getAttribute(Const.CURRENT_USER);
-        if(currentUser == null){
-            return ServerResponse.createByErrorMessage("未登录，请先登陆");
-        }
-        //2.检察是否为管理员
-        if(iUserService.checkAdminRole(currentUser).isSuccess()){
-            //3.1上传文件
+//        User currentUser = (User)session.getAttribute(Const.CURRENT_USER);
+//        if(currentUser == null){
+//            return ServerResponse.createByErrorMessage("未登录，请先登陆");
+//        }
+//        //2.检察是否为管理员
+//        if(iUserService.checkAdminRole(currentUser).isSuccess()){
+//            //3.1上传文件
+//
+//            String uploadFilePath = this.getClass().getClassLoader().getResource("").getPath();
+//          //  String contextPath = request.getSession().getServletContext().getRealPath("upload");
+//            //3.2返回上传的文件名
+//            String targetFileName = iFileService.upload(file, uploadFilePath);
+//            //3.3将文件的uri和url返回给前端
+//            Map<String ,String> fileMap = new HashMap<>();
+//            fileMap.put("uri",targetFileName);
+//            fileMap.put("url", PropertiesUtil.getProperty("ftp.server.http.prefix")+targetFileName);
+//            return ServerResponse.createBySuccess(fileMap);
+//
+//        }else{
+//            return ServerResponse.createByErrorMessage("不是管理员，无权限操作");
+//        }
 
-            String uploadFilePath = this.getClass().getClassLoader().getResource("").getPath();
-          //  String contextPath = request.getSession().getServletContext().getRealPath("upload");
-            //3.2返回上传的文件名
-            String targetFileName = iFileService.upload(file, uploadFilePath);
-            //3.3将文件的uri和url返回给前端
-            Map<String ,String> fileMap = new HashMap<>();
-            fileMap.put("uri",targetFileName);
-            fileMap.put("url", PropertiesUtil.getProperty("ftp.server.http.prefix")+targetFileName);
-            return ServerResponse.createBySuccess(fileMap);
-
-        }else{
-            return ServerResponse.createByErrorMessage("不是管理员，无权限操作");
-        }
+        //拦截器已经验证权限，直接进行业务处理
+        String uploadFilePath = this.getClass().getClassLoader().getResource("").getPath();
+        //  String contextPath = request.getSession().getServletContext().getRealPath("upload");
+        //3.2返回上传的文件名
+        String targetFileName = iFileService.upload(file, uploadFilePath);
+        //3.3将文件的uri和url返回给前端
+        Map<String ,String> fileMap = new HashMap<>();
+        fileMap.put("uri",targetFileName);
+        fileMap.put("url", PropertiesUtil.getProperty("ftp.server.http.prefix")+targetFileName);
+        return ServerResponse.createBySuccess(fileMap);
 
 
  /*       ServletContext serverContext = request.getSession(true).getServletContext();
@@ -233,37 +257,55 @@ public class ProductManageController {
         }*/
 
         //1.检查是否登陆
-        User currentUser = (User)session.getAttribute(Const.CURRENT_USER);
+//        User currentUser = (User)session.getAttribute(Const.CURRENT_USER);
+//        Map resultMap = Maps.newHashMap();
+//        if(currentUser == null){
+//                resultMap.put("success",false);
+//                resultMap.put("msg","请先登陆管理员");
+//            return resultMap;
+//        }
+//        //2.检察是否为管理员
+//        if(iUserService.checkAdminRole(currentUser).isSuccess()){
+//            //3.1上传文件
+//
+//            String uploadFilePath = this.getClass().getClassLoader().getResource("").getPath();
+//        //    String contextPath = request.getSession().getServletContext().getRealPath("upload");
+//            //3.2返回上传的文件名
+//            String targetFileName = iFileService.upload(file, uploadFilePath);
+//            if(StringUtils.isBlank(targetFileName)){
+//                resultMap.put("success",false);
+//                resultMap.put("msg","上传失败");
+//                return resultMap;
+//            }
+//            //3.3将文件的uri和url返回给前端
+//            resultMap.put("success",true);
+//            resultMap.put("msg","上传成功");
+//            resultMap.put("file_path", PropertiesUtil.getProperty("ftp.server.http.prefix")+targetFileName);
+//            return resultMap;
+//
+//        }else{
+//            resultMap.put("success",false);
+//            resultMap.put("msg","没有权限上传");
+//            return resultMap;
+//        }
+
+        //拦截器已经验证权限，直接进行业务处理
+
         Map resultMap = Maps.newHashMap();
-        if(currentUser == null){
-                resultMap.put("success",false);
-                resultMap.put("msg","请先登陆管理员");
-            return resultMap;
-        }
-        //2.检察是否为管理员
-        if(iUserService.checkAdminRole(currentUser).isSuccess()){
-            //3.1上传文件
-
-            String uploadFilePath = this.getClass().getClassLoader().getResource("").getPath();
+        String uploadFilePath = this.getClass().getClassLoader().getResource("").getPath();
         //    String contextPath = request.getSession().getServletContext().getRealPath("upload");
-            //3.2返回上传的文件名
-            String targetFileName = iFileService.upload(file, uploadFilePath);
-            if(StringUtils.isBlank(targetFileName)){
-                resultMap.put("success",false);
-                resultMap.put("msg","上传失败");
-                return resultMap;
-            }
-            //3.3将文件的uri和url返回给前端
-            resultMap.put("success",true);
-            resultMap.put("msg","上传成功");
-            resultMap.put("file_path", PropertiesUtil.getProperty("ftp.server.http.prefix")+targetFileName);
-            return resultMap;
-
-        }else{
+        //3.2返回上传的文件名
+        String targetFileName = iFileService.upload(file, uploadFilePath);
+        if(StringUtils.isBlank(targetFileName)){
             resultMap.put("success",false);
-            resultMap.put("msg","没有权限上传");
+            resultMap.put("msg","上传失败");
             return resultMap;
         }
+        //3.3将文件的uri和url返回给前端
+        resultMap.put("success",true);
+        resultMap.put("msg","上传成功");
+        resultMap.put("file_path", PropertiesUtil.getProperty("ftp.server.http.prefix")+targetFileName);
+        return resultMap;
 
     }
 

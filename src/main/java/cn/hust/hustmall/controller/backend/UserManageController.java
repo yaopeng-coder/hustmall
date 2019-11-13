@@ -4,12 +4,15 @@ import cn.hust.hustmall.common.Const;
 import cn.hust.hustmall.common.ServerResponse;
 import cn.hust.hustmall.pojo.User;
 import cn.hust.hustmall.service.IUserService;
+import cn.hust.hustmall.util.CookieUtil;
+import cn.hust.hustmall.util.JsonUtil;
+import cn.hust.hustmall.util.RedisShardedPoolUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 /**
@@ -33,16 +36,18 @@ public class UserManageController {
      * @param session
      * @return
      */
-    @RequestMapping(value = "/login.do",method = RequestMethod.POST)
+    @RequestMapping(value = "/login.do")
     @ResponseBody
-    public ServerResponse<User> login(String username, String password, HttpSession session){
+    public ServerResponse<User> login(String username, String password, HttpSession session, HttpServletResponse httpServletResponse){
 
         ServerResponse<User> response = iUserService.login(username,password);
         if(response.isSuccess()){
             User user = response.getData();
             //说明登陆的是管理员
             if(user.getRole() == Const.Role.ROLE_ADMIN){
-                session.setAttribute(Const.CURRENT_USER,user);
+             //   session.setAttribute(Const.CURRENT_USER,user);
+                CookieUtil.writeLoginToken(httpServletResponse,session.getId());
+                RedisShardedPoolUtil.setEx(session.getId(), JsonUtil.obj2String(user),Const.RedisCacheExtime.REDIS_SESSION_EXTIME);
                 return response;
             }else{
                 return ServerResponse.createByErrorMessage("不是管理员，无法登录");
