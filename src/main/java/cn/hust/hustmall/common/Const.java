@@ -20,7 +20,12 @@ public class Const {
     public  static final Set<String> PRICE_ASC_DESC = Sets.newHashSet("price_desc","price_asc");
 
     public interface RedisCacheExtime{
-        int REDIS_SESSION_EXTIME = 60 * 30; //30分钟
+        int REDIS_SESSION_EXTIME = 60 * 30; //sso 单点登陆session30分钟
+        int REDIS_LOCK_EXTIME = 50; //定时关单redis分布式锁50秒
+    }
+
+    public interface RedisLock{
+        String REDIS_CLOSE_ORDER_LOCK = "REDIS_CLOSE_ORDER_LOCK";
     }
 
     public interface Cart{

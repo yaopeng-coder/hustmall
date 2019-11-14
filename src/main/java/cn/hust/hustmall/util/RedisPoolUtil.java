@@ -49,6 +49,36 @@ public class RedisPoolUtil {
         return result;
     }
 
+    public static Long setnx(String key, String value){
+        Jedis jedis = null;
+        Long result = null;
+
+        try {
+            jedis = RedisPool.getResource();
+            result = jedis.setnx(key,value);
+        } catch (Exception e) {
+            log.error("setnx,jedis:{} ,result:{},error",jedis,result,e);
+            RedisPool.returnBrokenResource(jedis);
+        }
+        RedisPool.returnResource(jedis);
+        return result;
+    }
+
+    public static String getSet(String key, String value){
+        Jedis jedis = null;
+        String result = null;
+
+        try {
+            jedis = RedisPool.getResource();
+            result = jedis.getSet(key,value);
+        } catch (Exception e) {
+            log.error("getSet,jedis:{} ,result:{},error",jedis,result,e);
+            RedisPool.returnBrokenResource(jedis);
+        }
+        RedisPool.returnResource(jedis);
+        return result;
+    }
+
     public static String get(String key){
         Jedis jedis = null;
         String result = null;
@@ -95,6 +125,8 @@ public class RedisPoolUtil {
         RedisPool.returnResource(jedis);
         return result;
     }
+
+
 
 
 

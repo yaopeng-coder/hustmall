@@ -152,6 +152,9 @@ public class CartServiceImpl implements ICartService{
     }
 
     /**
+     *
+     * 正常库存的话，可以不锁，因为库存量比较大，在什么时候要用呢，在秒杀这种qps非常大的时候可以使用的
+     * 这里普通商品是有实时校验库存的
      * 得到某个用户的购物车列表
      * @param userId
      * @return

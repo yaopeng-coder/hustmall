@@ -4,6 +4,7 @@ import cn.hust.hustmall.common.Const;
 import cn.hust.hustmall.service.IOrderService;
 import cn.hust.hustmall.util.PropertiesUtil;
 import cn.hust.hustmall.util.RedisPoolUtil;
+import cn.hust.hustmall.util.ThreadUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,14 +23,28 @@ public class CloseOrderTask {
     @Autowired
     private IOrderService orderService;
 
+    //用来解决删除锁误删情况
+    private ThreadLocal<String> threadLocal = new ThreadLocal();
+
     /**
      * 1.这里使用redis分布式锁+spring schedule实现定时关单，因为我们只希望有一个tomcat在执行这个关单任务即可，不需要都来执行，会浪费数据库
      * 的性能，而且你不停的执行sql语句，有可能会产生错乱，另外不能只在一个tomcat中加入定时任务的代码，会存在单点故障的问题，所以要做成分布式锁
-     * 2.如果一个任务执行时间比较长，结果锁已经失效了，那么就会有另一个线程获取锁执行任务， 就会产生两个线程同时都可以执行该任务，所以这里的锁的时间要根据你的定时任务调整，
-     *  课程里也有说，所以是一个太极的过程，不可能设置好千秋不变的。技术架构就是要随着业务变化不断变化
-     * ~~设置的锁的时间一定要保证足够任务执行完。所以平时评估网站的qps等还是非常有必要的，也可以观察日志去看任务执行的时间然后来判断
-     * 3.我们为了防止死锁，加入expire和时间戳，但也会导致一个问题，就是如果第一个获取锁的线程仍在工作，但是他的expire和时间戳已经过时，
-     * 这时就会有别的线程可以获取到锁，该怎么解决
+     *
+     * 2.分布式锁最终通过sernx命令判断，只会有一个进程获得锁，但是存在一个问题，如果这个节点挂了，那么死锁，所以设置expire，
+     * 但是由于setnx 和expire是两个命令，所以如果在setnx和expire之间挂了，还是会死锁，所以我们加入时间戳，
+     *
+     *3. 但时间戳和expire也会导致一个问题，就是如果第一个获取锁的线程仍在工作，但是他的expire和时间戳已经过时，
+     * 这时就会有别的线程可以获取到锁，解决这个问题i，可以加个守护线程给快要过期的锁续航，当过去了29秒，线程A还没执行完，
+     * 该守护线程就会执行expire命令和getset,重置他的时间，为这把锁续航20秒，守护线程从第29秒开始执行，每20秒执行一次，
+     * 即使这个节点挂了，由于线程A和守护线程在同一个进程，守护线程也会停下，这把锁到了超时的时候，没人给他续命，也就自动释放了
+     *
+     * 3.还有一个问题是getset由于是tomcat自己生成时间，所以必须要求分布式下每个tomcat时间必须同步，
+     * 然后是这个锁的过期时间可能会被其他进程修改，并且所不具备拥有者标识，所以任何人都可以修改，在jedis1.9版本下可以用threadLocal+LUA脚本解决，
+     * private ThreadLocal<String> threadLocal = new ThreadLocal();String s = UUID.randomUUID().toString();threadLocal.set(s);
+     *
+     * 4.在redis2.6之后，set指令支持过期时间和nx判断，所以不需要时间戳，时间戳可以改成requstId,然后在判断锁标识那里，可以通过Lua脚本判断  因为判断和释放锁是两个操作
+     * String luaScript = "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end";
+     *  redisClient.eval(luaScript , Collections.singletonList(key), Collections.singletonList(threadId));
      */
 //    @Scheduled(cron = "0 */1 * * * ?") //每一分钟启动一次
 //    public void closeOrderTaskV1(){
@@ -75,11 +90,19 @@ public class CloseOrderTask {
 
     public void closeOrder(){
         //1.修改锁的过期时间  这是防止死锁的第一个措施，不设置过期时间万一系统在这里挂了，那么会导致这个锁一直存在，很容易就导致死锁
-        RedisPoolUtil.expire(Const.RedisLock.REDIS_CLOSE_ORDER_LOCK,5);
-        //2.执行关闭订单任务
+        RedisPoolUtil.expire(Const.RedisLock.REDIS_CLOSE_ORDER_LOCK,Const.RedisCacheExtime.REDIS_LOCK_EXTIME);
+        //2.加入守护线程
+        Thread daemonThread = ThreadUtil.getDaemonThread(Const.RedisLock.REDIS_CLOSE_ORDER_LOCK);
+        daemonThread.start();
+        //3.执行关闭订单任务
         int hour = Integer.parseInt(PropertiesUtil.getProperty("close.order.task.time","2"));
         orderService.closeOrder(hour);
-        //3.删除锁
+
+        //关闭守护线程
+        ThreadUtil.stopThread();
+        //一定也要执行这个interrupt，能将它从sleep中唤醒
+        daemonThread.interrupt();
+        //4.删除锁
         RedisPoolUtil.del(Const.RedisLock.REDIS_CLOSE_ORDER_LOCK);
     }
 }
