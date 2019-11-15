@@ -230,4 +230,22 @@
     FROM mmall_order
     ORDER BY create_time desc
   </select>
+
+  <select id="selectByOrderStatusCreateTime" resultMap="BaseResultMap" parameterType="map">
+    SELECT
+    <include refid="Base_Column_List"/>
+    FROM mmall_order
+    WHERE status = #{orderStatus}
+    <![CDATA[
+    AND create_time <= #{createTime}]]>
+    order by create_time desc
+
+  </select>
+  
+  <update id="closeOrderById" parameterType="int">
+    UPDATE
+    mmall_order
+    SET status = 0,update_time = now()
+    WHERE id = #{id}
+  </update>
 </mapper>

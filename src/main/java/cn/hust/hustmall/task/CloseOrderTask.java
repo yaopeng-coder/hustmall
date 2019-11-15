@@ -136,7 +136,7 @@ public class CloseOrderTask {
                 //3.1执行关闭订单任务
                 log.info("获取redisson分布式锁成功，{}，{}",Const.RedisLock.REDIS_CLOSE_ORDER_LOCK,Thread.currentThread().getName());
                 int hour = Integer.parseInt(PropertiesUtil.getProperty("close.order.task.time","2"));
-           //     orderService.closeOrder(hour);
+               orderService.closeOrder(hour);
             }else {
                 log.info("Redisson没有获取到分布式锁:{},ThreadName:{}",Const.RedisLock.REDIS_CLOSE_ORDER_LOCK,Thread.currentThread().getName());
             }

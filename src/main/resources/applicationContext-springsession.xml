@@ -28,7 +28,7 @@
     <bean name="jedisConnectionFactory" class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory">
         <property name="poolConfig" ref="jedisPoolConfig"></property>
         <property name="hostName" value="116.62.243.88"></property>
-        <property name="port" value="6379"></property>
+        <property name="port" value="6380"></property>
     </bean>
 
     <!--配置cookie的相关属性，这样可以域名登陆-->

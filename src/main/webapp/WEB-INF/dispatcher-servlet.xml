@@ -8,7 +8,10 @@
 	http://www.springframework.org/schema/mvc
 	http://www.springframework.org/schema/mvc/spring-mvc.xsd">
 
-    <context:component-scan base-package="cn.hust.hustmall" annotation-config="true"/>
+    <!--spring和springmvc扫描包隔离配置，且spring和springmvc配置重复扫描service会导致spring注册事务失败-->
+    <context:component-scan base-package="cn.hust.hustmall.controller" annotation-config="true" use-default-filters="false">
+        <context:include-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+    </context:component-scan>
 
 
 
@@ -32,6 +35,20 @@
             </bean>
         </mvc:message-converters>
     </mvc:annotation-driven>
+    
+    
+    <mvc:interceptors>
+        <mvc:interceptor>
+            <!--manage/a.do  /manage/*-->
+            <!--manage/b.do  /manage/*-->
+            <!--manage/product/save.do /manage/**-->
+            <!--manage/order/detail.do /manage/**-->
+            <mvc:mapping path="/manage/**"/>
+            <!--直接在拦截器中用方法进行判断控制-->
+            <!--<mvc:exclude-mapping path="/manage/user/login.do"/>-->
+            <bean class="cn.hust.hustmall.controller.common.interceptor.BackendAuthorityInterceptor"></bean>
+        </mvc:interceptor>
+    </mvc:interceptors>
 
 
 

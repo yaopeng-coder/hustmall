@@ -3,16 +3,25 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
        xmlns:tx="http://www.springframework.org/schema/tx" xmlns:jdbc="http://www.springframework.org/schema/jdbc"
        xmlns:context="http://www.springframework.org/schema/context"
-       xsi:schemaLocation="
-     http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+       xmlns:task="http://www.springframework.org/schema/task"
+       xsi:schemaLocation="http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
      http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
      http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
-     http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
+     http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd">
 
-    <context:component-scan base-package="cn.hust.hustmall" annotation-config="true"/>
+    <!--spring和springmvc扫描包隔离配置，且spring和springmvc配置重复扫描service会导致spring注册事务失败-->
+    <context:component-scan base-package="cn.hust.hustmall" annotation-config="true">
+        <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+    </context:component-scan>
 
     <!--<context:annotation-config/>-->
     <aop:aspectj-autoproxy/>
+
+    <!--保证这个properties里面配置的属性可以被读取-->
+    <context:property-placeholder location="classpath:mmall.properties"/>
+
+    <!--spring schdule定时任务开启-->
+    <task:annotation-driven/>
 
 
     <import resource="applicationContext-datasource.xml"/>

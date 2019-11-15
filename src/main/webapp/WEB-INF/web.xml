@@ -27,25 +27,25 @@
 
 
     <!--实现单点登陆配置的增长session有效期的过滤器-->
-   <!-- <filter>
+    <filter>
         <filter-name>sessionExpireFilter</filter-name>
         <filter-class>cn.hust.hustmall.controller.common.SessionExpireFilter</filter-class>
     </filter>
     <filter-mapping>
         <filter-name>sessionExpireFilter</filter-name>
         <url-pattern>*.do</url-pattern>
-    </filter-mapping>-->
+    </filter-mapping>
 
     <!--spring session 配置的过滤器-->
     <!--DelegatingFilterProxy这个代理类包含了上述的给session重置有效期的功能和包装现在的httpSession-->
-    <filter>
+  <!--  <filter>
         <filter-name>springSessionRepositoryFilter</filter-name>
         <filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
     </filter>
     <filter-mapping>
         <filter-name>springSessionRepositoryFilter</filter-name>
         <url-pattern>*.do</url-pattern>
-    </filter-mapping>
+    </filter-mapping>-->
 
 
 
