@@ -55,6 +55,16 @@ public class CloseOrderTask {
      * 4.在redis2.6之后，set指令支持过期时间和nx判断，所以不需要时间戳，时间戳可以改成requstId,然后在判断锁标识那里，可以通过Lua脚本判断  因为判断和释放锁是两个操作
      * String luaScript = "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end";
      *  redisClient.eval(luaScript , Collections.singletonList(key), Collections.singletonList(threadId));
+     *
+     * 5.这里部署阿里云有一个比较坑的地方是，我通过shell脚本从github上pull代码并且maven编译打包在tomcat运行后，程序仍然运行结果没有变化，
+     * 我就用less logs/catalina.out查看了一下日志，发现端口被占用，用ps -ef |grep tomcat发现两个tomcat运行，
+     * 安装一个纯净的tomcat放在linux上，启动—>查看tomcat进程—>关闭–>查看tomcat进程，关闭没有tomcat进程
+     * 将项目丢进tomcat， 启动—> 查看进程—> 关闭—> 查看进程。。。。。。。。tomcat的进程还在！一般造成这种原因是因为项目中有非守护线程的存在
+     * ,tomcat关闭有时会因为应用过多出现僵死状态，这个时候会显示有进程，谷歌表示导致这种情况的原因有N多种,解决直接kill -9
+     *
+     *6.最后注意阿里云上日志的位置，由于我们的日志是60s扫描一次，所以Logback是热加载的,启动第二个tomcat需要修改日志配置文件，
+     * 路径 /developer/tomcat1/webapps/ROOT/WEB-INF/classes
+     *
      */
 //    @Scheduled(cron = "0 */1 * * * ?") //每一分钟启动一次
 //    public void closeOrderTaskV1(){
@@ -73,7 +83,9 @@ public class CloseOrderTask {
         Long lockResult = RedisPoolUtil.setnx(Const.RedisLock.REDIS_CLOSE_ORDER_LOCK, String.valueOf(System.currentTimeMillis() + outTime));
         //2.若可以，则expire修改锁的过期时间，然后执行关闭订单任务,然后删除锁
         if(lockResult.intValue() == 1){
+            log.info("成功获取到分布式锁，{}",Thread.currentThread().getName());
                 this.closeOrder();
+
         }else {
             //3.若不可以
             //3.1先用get获取当前锁的值value1,若为空，则仍然可以setex然后重复第一步，否则返回获取锁失败
@@ -169,17 +181,11 @@ public class CloseOrderTask {
         daemonThread.start();
         //3.执行关闭订单任务
         int hour = Integer.parseInt(PropertiesUtil.getProperty("close.order.task.time","2"));
-    //    orderService.closeOrder(hour);
-        try {
-            Thread.sleep(100000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        orderService.closeOrder(hour);
 
-        //关闭守护线程
-        ThreadUtil.stopThread();
-        //一定也要执行这个interrupt，能将它从sleep中唤醒
+        //中断守护线程，会将循环标志位置为false，退出循环
         daemonThread.interrupt();
+
         //4.删除锁
         RedisPoolUtil.del(Const.RedisLock.REDIS_CLOSE_ORDER_LOCK);
     }
