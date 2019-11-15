@@ -67,7 +67,7 @@ public class ThreadUtil {
                     log.info("守护线程睡眠{}",waitTime);
                     Thread.sleep(waitTime);
                     log.info("守护线程开始续时，{}",Thread.currentThread().getName());
-                    RedisPoolUtil.expire(key,waitTime);
+                    RedisPoolUtil.expire(key,Const.RedisCacheExtime.REDIS_LOCK_EXTIME);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                     log.info("守护线程被强制中断,{}",Thread.currentThread().getName());

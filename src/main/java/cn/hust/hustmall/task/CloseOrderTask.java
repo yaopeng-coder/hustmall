@@ -1,15 +1,20 @@
 package cn.hust.hustmall.task;
 
 import cn.hust.hustmall.common.Const;
+import cn.hust.hustmall.common.RedissonManager;
 import cn.hust.hustmall.service.IOrderService;
 import cn.hust.hustmall.util.PropertiesUtil;
 import cn.hust.hustmall.util.RedisPoolUtil;
 import cn.hust.hustmall.util.ThreadUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.redisson.Redisson;
+import org.redisson.api.RLock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * @program: hustmall
@@ -22,6 +27,11 @@ public class CloseOrderTask {
 
     @Autowired
     private IOrderService orderService;
+
+    @Autowired
+    private RedissonManager redissonManager;
+
+
 
     //用来解决删除锁误删情况
     private ThreadLocal<String> threadLocal = new ThreadLocal();
@@ -55,7 +65,7 @@ public class CloseOrderTask {
 //
 //    }
 
-    @Scheduled(cron = "0 */1 * * * ?") //每一分钟启动一次
+   @Scheduled(cron = "0 */1 * * * ?") //每一分钟启动一次
     public void closeOrderTaskV2(){
         log.info("关闭订单定时任务启动");
         //1.首先通过setNx方法判断可不可以加锁，锁的value值是当前时间加一个过期时间
@@ -88,6 +98,69 @@ public class CloseOrderTask {
         log.info("关闭订单定时任务结束");
     }
 
+
+    /**
+     * 主从复制，每台机器都有所有数据，主机可读写，从机只可读，适合数据量不太大，请求量中等的情况
+       分片存储，每台机器都有部分数据，这样意味着可以存储大量的数据能够承担大量的请求，
+       但是有一个缺点就是不能支持批量操作，因为不同的数据分散在不同的实例
+     */
+
+    /**
+     * redission源码解析，Rlock是接口，有四个子类实现，分别是RedissonLock,RedissonReadLock,RedissonWriteLock,RedissonFairLock,
+     * redissoLock在trylock阶段生成threadId，unlock调用，来防止别人误解锁问题，redossLock的trylock如果调用不带释放时间那个函数的话，
+     * 它内部就多了异步scheduleExpirationRenewal调度，会异步调用redis的pexpire命令，重置过期时间 ，
+     * 只有unlock调用cancelExpirationRenewal()才会停止但是会导致一个问题，就是如果该节点挂了任务没办法自行停止
+     *获取锁和释放锁都是lua脚本加上Redis的eval命令实现，所以做好任务超时也设置个守护线程
+     */
+
+    /**
+     * 为什么用守护线程？ 首先守护线程和用户线程最大的不同就是在于虚拟机的离开，如果用户线程全部退出，java虚拟机也就退出，
+     * 所以一般守护线程就是用来为其他对象和线程服务的，这样就能保证当我们这个节点挂了，这个守护线程也就能挂了
+     * thread.setDaemon(true)必须在thread.start()之前设置，
+     * 否则会跑出一个IllegalThreadStateException异常。你不能把正在运行的常规线程设置为守护线程
+     */
+
+    //  @Scheduled(cron = "0 */1 * * * ?")
+    public void closeOrderTaskV3(){
+        //1.获取到redisson
+        Redisson redisson = redissonManager.getRedisson();
+        //2.获取到分布式锁
+        Boolean booleanLock = Boolean.FALSE;
+        RLock lock = redisson.getLock(Const.RedisLock.REDIS_CLOSE_ORDER_LOCK);
+        //3.尝试加锁，成功执行业务
+        try {
+            //这个执行时间有一个坑，如果时间过长，执行时间过短，那么极端的时间内还是会有很多其他服务调用，虽然不是同一时间，但是也会影响性能
+            //对于秒杀可以，但对于定时任务不好，所以将其设置为0；
+            //lock.trylock语句底层使用了lua语句，能保证原子性
+            if(booleanLock = lock.tryLock(2,50, TimeUnit.SECONDS)){
+                //3.1执行关闭订单任务
+                log.info("获取redisson分布式锁成功，{}，{}",Const.RedisLock.REDIS_CLOSE_ORDER_LOCK,Thread.currentThread().getName());
+                int hour = Integer.parseInt(PropertiesUtil.getProperty("close.order.task.time","2"));
+           //     orderService.closeOrder(hour);
+            }else {
+                log.info("Redisson没有获取到分布式锁:{},ThreadName:{}",Const.RedisLock.REDIS_CLOSE_ORDER_LOCK,Thread.currentThread().getName());
+            }
+        } catch (InterruptedException e) {
+            log.error("获取redisson分布式锁出现异常，{}，{}",Const.RedisLock.REDIS_CLOSE_ORDER_LOCK,Thread.currentThread().getName());
+        } finally {
+
+            if(!booleanLock){
+                //没有获取到锁直接返回
+                return;
+            }
+
+            //获取到锁要先释放锁
+            lock.unlock();
+            log.info("释放redisson分布式锁成功，{}，{}",Const.RedisLock.REDIS_CLOSE_ORDER_LOCK,Thread.currentThread().getName());
+        }
+
+
+
+
+
+    }
+
+
     public void closeOrder(){
         //1.修改锁的过期时间  这是防止死锁的第一个措施，不设置过期时间万一系统在这里挂了，那么会导致这个锁一直存在，很容易就导致死锁
         RedisPoolUtil.expire(Const.RedisLock.REDIS_CLOSE_ORDER_LOCK,Const.RedisCacheExtime.REDIS_LOCK_EXTIME);
@@ -96,7 +169,12 @@ public class CloseOrderTask {
         daemonThread.start();
         //3.执行关闭订单任务
         int hour = Integer.parseInt(PropertiesUtil.getProperty("close.order.task.time","2"));
-        orderService.closeOrder(hour);
+    //    orderService.closeOrder(hour);
+        try {
+            Thread.sleep(100000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         //关闭守护线程
         ThreadUtil.stopThread();

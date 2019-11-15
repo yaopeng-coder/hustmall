@@ -46,6 +46,7 @@ public class RedisShardedPool {
         //连接耗尽时是否阻塞，FALSE会抛出异常，true阻塞直到超时，默认为true
         poolConfig.setBlockWhenExhausted(true);
 
+
         JedisShardInfo shardInfo1 = new JedisShardInfo(redis1Ip,redis1Port,2*1000);
         JedisShardInfo shardInfo2 = new JedisShardInfo(redis2Ip,redis2Port,2*1000);
 
@@ -56,6 +57,7 @@ public class RedisShardedPool {
         //Redis服务器分区划分：将每台服务器服务器采用哈希算法划分为160个虚拟实例
         //sharded采用的哈希算法：MD5和MurmurHash类型；这里采用64位的MurmurHash算法，即一致性分布式hash算法
         //提供基于Key的划分方法；提供了ShardKeyTag实现
+        //springsession 和redission不支持分布式redis
         shardedJedisPool = new ShardedJedisPool(poolConfig,shardInfoList, Hashing.MURMUR_HASH, Sharded.DEFAULT_KEY_TAG_PATTERN);
     }
 
